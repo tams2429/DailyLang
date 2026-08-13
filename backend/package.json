@@ -1,13 +1,13 @@
 {
-  "name": "backend",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  }
+    "name": "backend",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "bun run --watch src/index.ts",
+        "start": "bun run src/index.ts"
+    },
+    "devDependencies": {
+        "@types/bun": "latest"
+    }
 }

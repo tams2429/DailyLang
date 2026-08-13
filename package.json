@@ -1,10 +1,13 @@
 {
-  "name": "dailylang",
-  "private": true,
-  "version": "0.0.0",
-  "workspaces": ["frontend", "backend"],
-  "scripts": {
-    "dev:frontend": "cd frontend && bun run dev",
-    "dev:backend": "cd backend && bun run dev"
-  }
+    "name": "dailylang",
+    "private": true,
+    "version": "0.0.0",
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
+    "scripts": {
+        "dev:frontend": "cd frontend && bun run dev",
+        "dev:backend": "cd backend && bun run dev"
+    }
 }
