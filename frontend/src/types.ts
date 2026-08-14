@@ -7,6 +7,8 @@ export interface Phrase {
     category: 'greeting' | 'daily-life' | 'food' | 'travel' | 'work';
     difficulty: 'beginner' | 'intermediate' | 'advanced';
     practicePrompt: string;
+    /** A correct example response (romaji) used to generate hints */
+    exampleResponse: string;
 }
 
 export interface PracticeResponseEntry {

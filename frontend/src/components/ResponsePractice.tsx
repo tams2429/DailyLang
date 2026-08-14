@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Phrase } from '../types';
 import { usePhraseStore } from '../store/usePhraseStore';
 
@@ -8,11 +8,22 @@ interface ResponsePracticeProps {
 
 export function ResponsePractice({ phrase }: ResponsePracticeProps) {
     const [text, setText] = useState('');
+    const [showHint, setShowHint] = useState(false);
     const submitting = usePhraseStore((state) => state.submitting);
     const lastSubmittedText = usePhraseStore(
         (state) => state.lastSubmittedText,
     );
     const submitResponse = usePhraseStore((state) => state.submitResponse);
+
+    useEffect(() => {
+        setShowHint(false);
+    }, [phrase.id]);
+
+    const hint = phrase.exampleResponse
+        .split(' ')
+        .filter(Boolean)
+        .map((word) => [word[0].toUpperCase(), ...word.slice(1).split('').map(() => '_')].join(' '))
+        .join('   ');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,13 +46,27 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
                     rows={3}
                     className="w-full rounded-lg border border-slate-200 p-3 text-lg focus:border-rose-400 focus:outline-none"
                 />
-                <button
-                    type="submit"
-                    disabled={submitting || !text.trim()}
-                    className="self-end rounded-full bg-slate-900 px-5 py-2 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    {submitting ? 'Saving...' : 'Submit response'}
-                </button>
+                <div className="flex items-center justify-between">
+                    <button
+                        type="button"
+                        onClick={() => setShowHint((prev) => !prev)}
+                        className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+                    >
+                        {showHint ? 'Hide hint' : 'Show hint'}
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={submitting || !text.trim()}
+                        className="rounded-full bg-slate-900 px-5 py-2 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        {submitting ? 'Saving...' : 'Submit response'}
+                    </button>
+                </div>
+                {showHint && (
+                    <p className="text-center text-lg text-slate-500">
+                        {hint}
+                    </p>
+                )}
             </form>
             {lastSubmittedText && (
                 <p className="mt-3 text-sm text-emerald-600">

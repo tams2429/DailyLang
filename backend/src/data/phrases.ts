@@ -9,6 +9,8 @@ export interface Phrase {
     difficulty: 'beginner' | 'intermediate' | 'advanced';
     /** Suggested example response the user can practice saying back */
     practicePrompt: string;
+    /** A correct example response (romaji) used to generate hints */
+    exampleResponse: string;
 }
 
 // Preprogrammed daily phrases. Add real audio files to backend/public/audio
@@ -23,6 +25,7 @@ export const phrases: Phrase[] = [
         category: 'greeting',
         difficulty: 'beginner',
         practicePrompt: 'Reply with a good morning greeting of your own.',
+        exampleResponse: 'Ohayou gozaimasu',
     },
     {
         id: 'genki-desu-ka',
@@ -34,6 +37,7 @@ export const phrases: Phrase[] = [
         difficulty: 'beginner',
         practicePrompt:
             'Answer how you are feeling today, e.g. 元気です (Genki desu).',
+        exampleResponse: 'Genki desu',
     },
     {
         id: 'onaka-ga-suita',
@@ -44,6 +48,7 @@ export const phrases: Phrase[] = [
         category: 'daily-life',
         difficulty: 'beginner',
         practicePrompt: "Say what you'd like to eat right now.",
+        exampleResponse: 'Sushi ga tabetai desu',
     },
     {
         id: 'nani-ga-tabetai',
@@ -54,6 +59,7 @@ export const phrases: Phrase[] = [
         category: 'food',
         difficulty: 'intermediate',
         practicePrompt: "Respond with a food you'd like to eat.",
+        exampleResponse: 'Ramen ga tabetai desu',
     },
     {
         id: 'eki-wa-doko-desu-ka',
@@ -64,6 +70,7 @@ export const phrases: Phrase[] = [
         category: 'travel',
         difficulty: 'intermediate',
         practicePrompt: 'Practice giving simple directions in Japanese.',
+        exampleResponse: 'Massugu itte kudasai',
     },
     {
         id: 'otsukaresama-desu',
@@ -74,5 +81,6 @@ export const phrases: Phrase[] = [
         category: 'work',
         difficulty: 'advanced',
         practicePrompt: 'Reply to a coworker at the end of the day.',
+        exampleResponse: 'Otsukaresama deshita',
     },
 ];
