@@ -2,18 +2,22 @@ import { useEffect } from 'react';
 import { usePhraseStore } from './store/usePhraseStore';
 import { PhraseCard } from './components/PhraseCard';
 import { ResponsePractice } from './components/ResponsePractice';
+import { scenarios } from './data/scenarios';
 
 function App() {
     const {
-        phrases,
+        currentScenario,
         currentIndex,
+        scenarioPhrases,
         status,
         error,
         loadPhrases,
         nextPhrase,
         previousPhrase,
+        setScenario,
     } = usePhraseStore();
     const currentPhrase = usePhraseStore((state) => state.currentPhrase());
+    const scenarioMeta = scenarios.find((s) => s.id === currentScenario);
 
     useEffect(() => {
         loadPhrases();
@@ -30,6 +34,34 @@ function App() {
                         Listen and practice a Japanese phrase every day
                     </p>
                 </header>
+
+                <div className="flex w-full max-w-xl flex-col items-center gap-2">
+                    <label
+                        htmlFor="scenario-select"
+                        className="text-sm font-medium text-slate-500"
+                    >
+                        Scenario
+                    </label>
+                    <select
+                        id="scenario-select"
+                        value={currentScenario}
+                        onChange={(e) =>
+                            setScenario(e.target.value as typeof currentScenario)
+                        }
+                        className="w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-center font-medium text-slate-700 focus:border-rose-400 focus:outline-none"
+                    >
+                        {scenarios.map((scenario) => (
+                            <option key={scenario.id} value={scenario.id}>
+                                {scenario.label}
+                            </option>
+                        ))}
+                    </select>
+                    {scenarioMeta && (
+                        <p className="text-center text-xs text-slate-400">
+                            {scenarioMeta.description}
+                        </p>
+                    )}
+                </div>
 
                 {status === 'loading' && (
                     <p className="text-slate-500">Loading phrases...</p>
@@ -55,12 +87,15 @@ function App() {
                                 Previous
                             </button>
                             <span className="text-sm text-slate-400">
-                                {currentIndex + 1} / {phrases.length}
+                                {currentIndex + 1} / {scenarioPhrases.length}
                             </span>
                             <button
                                 type="button"
                                 onClick={nextPhrase}
-                                disabled={currentIndex === phrases.length - 1}
+                                disabled={
+                                    currentIndex ===
+                                    scenarioPhrases.length - 1
+                                }
                                 className="rounded-full border border-slate-300 px-4 py-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 Next

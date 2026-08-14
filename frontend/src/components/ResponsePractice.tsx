@@ -22,7 +22,15 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
     const hint = phrase.exampleResponse
         .split(' ')
         .filter(Boolean)
-        .map((word) => [word[0].toUpperCase(), ...word.slice(1).split('').map(() => '_')].join(' '))
+        .map((word) =>
+            [
+                word[0].toUpperCase(),
+                ...word
+                    .slice(1)
+                    .split('')
+                    .map(() => '_'),
+            ].join(' '),
+        )
         .join('   ');
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -63,9 +71,7 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
                     </button>
                 </div>
                 {showHint && (
-                    <p className="text-center text-lg text-slate-500">
-                        {hint}
-                    </p>
+                    <p className="text-center text-lg text-slate-500">{hint}</p>
                 )}
             </form>
             {lastSubmittedText && (

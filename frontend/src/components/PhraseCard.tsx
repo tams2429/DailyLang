@@ -1,5 +1,6 @@
 import type { Phrase } from '../types';
 import { AudioPlayer } from './AudioPlayer';
+import { scenarios } from '../data/scenarios';
 
 interface PhraseCardProps {
     phrase: Phrase;
@@ -12,11 +13,15 @@ const difficultyColor: Record<Phrase['difficulty'], string> = {
 };
 
 export function PhraseCard({ phrase }: PhraseCardProps) {
+    const scenarioLabel =
+        scenarios.find((s) => s.id === phrase.scenario)?.label ??
+        phrase.scenario;
+
     return (
         <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-lg ring-1 ring-slate-200">
             <div className="mb-4 flex items-center justify-between">
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-                    {phrase.category.replace('-', ' ')}
+                    {scenarioLabel}
                 </span>
                 <span
                     className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${difficultyColor[phrase.difficulty]}`}

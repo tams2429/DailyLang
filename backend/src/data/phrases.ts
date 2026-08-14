@@ -1,11 +1,62 @@
+export type ScenarioId =
+    | 'greetings'
+    | 'restaurant'
+    | 'shop'
+    | 'plane'
+    | 'airport'
+    | 'hotel';
+
+export interface ScenarioMeta {
+    id: ScenarioId;
+    label: string;
+    description: string;
+}
+
+// Order here also defines the default scenario picker order.
+export const scenarios: ScenarioMeta[] = [
+    {
+        id: 'restaurant',
+        label: 'Restaurant',
+        description: 'Order food and interact with restaurant staff.',
+    },
+    {
+        id: 'shop',
+        label: 'Shop',
+        description: 'Browse and buy items at a shop.',
+    },
+    {
+        id: 'greetings',
+        label: 'Greetings',
+        description: 'Everyday greetings and small talk.',
+    },
+    {
+        id: 'plane',
+        label: 'Plane',
+        description: 'Conversations you might have onboard a flight.',
+    },
+    {
+        id: 'airport',
+        label: 'Airport',
+        description: 'Checking in and getting through the airport.',
+    },
+    {
+        id: 'hotel',
+        label: 'Hotel',
+        description: 'Checking in and out of a hotel.',
+    },
+];
+
 export interface Phrase {
     id: string;
+    /** Scenario/topic this phrase belongs to, used to group a conversation flow */
+    scenario: ScenarioId;
+    /** 1-based position of this phrase within its scenario's conversation flow */
+    order: number;
     japanese: string;
     romaji: string;
     english: string;
     /** Path served by this backend under /audio, e.g. /audio/ohayou.mp3 */
     audioUrl: string;
-    category: 'greeting' | 'daily-life' | 'food' | 'travel' | 'work';
     difficulty: 'beginner' | 'intermediate' | 'advanced';
     /** Suggested example response the user can practice saying back */
     practicePrompt: string;
@@ -13,27 +64,32 @@ export interface Phrase {
     exampleResponse: string;
 }
 
-// Preprogrammed daily phrases. Add real audio files to backend/public/audio
-// with matching filenames to enable playback.
+// Preprogrammed daily phrases, grouped by scenario so that navigating with
+// Next/Prev follows a natural conversation flow within that scenario.
+// Add real audio files to backend/public/audio with matching filenames to
+// enable playback.
 export const phrases: Phrase[] = [
+    // --- Greetings ---------------------------------------------------
     {
         id: 'ohayou-gozaimasu',
+        scenario: 'greetings',
+        order: 1,
         japanese: 'おはようございます',
         romaji: 'Ohayou gozaimasu',
         english: 'Good morning',
         audioUrl: '/audio/ohayou-gozaimasu.mp3',
-        category: 'greeting',
         difficulty: 'beginner',
         practicePrompt: 'Reply with a good morning greeting of your own.',
         exampleResponse: 'Ohayou gozaimasu',
     },
     {
         id: 'genki-desu-ka',
+        scenario: 'greetings',
+        order: 2,
         japanese: 'お元気ですか？',
         romaji: 'Genki desu ka?',
         english: 'How are you?',
         audioUrl: '/audio/genki-desu-ka.mp3',
-        category: 'greeting',
         difficulty: 'beginner',
         practicePrompt:
             'Answer how you are feeling today, e.g. 元気です (Genki desu).',
@@ -41,46 +97,313 @@ export const phrases: Phrase[] = [
     },
     {
         id: 'onaka-ga-suita',
+        scenario: 'greetings',
+        order: 3,
         japanese: 'お腹が空いた',
         romaji: 'Onaka ga suita',
         english: "I'm hungry",
         audioUrl: '/audio/onaka-ga-suita.mp3',
-        category: 'daily-life',
         difficulty: 'beginner',
         practicePrompt: "Say what you'd like to eat right now.",
         exampleResponse: 'Sushi ga tabetai desu',
     },
     {
-        id: 'nani-ga-tabetai',
-        japanese: '何が食べたいですか？',
-        romaji: 'Nani ga tabetai desu ka?',
-        english: 'What do you want to eat?',
-        audioUrl: '/audio/nani-ga-tabetai.mp3',
-        category: 'food',
-        difficulty: 'intermediate',
-        practicePrompt: "Respond with a food you'd like to eat.",
-        exampleResponse: 'Ramen ga tabetai desu',
-    },
-    {
-        id: 'eki-wa-doko-desu-ka',
-        japanese: '駅はどこですか？',
-        romaji: 'Eki wa doko desu ka?',
-        english: 'Where is the station?',
-        audioUrl: '/audio/eki-wa-doko-desu-ka.mp3',
-        category: 'travel',
-        difficulty: 'intermediate',
-        practicePrompt: 'Practice giving simple directions in Japanese.',
-        exampleResponse: 'Massugu itte kudasai',
-    },
-    {
         id: 'otsukaresama-desu',
+        scenario: 'greetings',
+        order: 4,
         japanese: 'お疲れ様です',
         romaji: 'Otsukaresama desu',
         english: 'Thank you for your hard work',
         audioUrl: '/audio/otsukaresama-desu.mp3',
-        category: 'work',
         difficulty: 'advanced',
         practicePrompt: 'Reply to a coworker at the end of the day.',
         exampleResponse: 'Otsukaresama deshita',
+    },
+
+    // --- Restaurant ----------------------------------------------------
+    {
+        id: 'restaurant-irasshaimase',
+        scenario: 'restaurant',
+        order: 1,
+        japanese: 'いらっしゃいませ',
+        romaji: 'Irasshaimase',
+        english: 'Welcome (said by staff)',
+        audioUrl: '/audio/restaurant-irasshaimase.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Greet the staff back as you walk in.',
+        exampleResponse: 'Konnichiwa',
+    },
+    {
+        id: 'restaurant-nanmei-sama',
+        scenario: 'restaurant',
+        order: 2,
+        japanese: '何名様ですか？',
+        romaji: 'Nanmei sama desu ka?',
+        english: 'How many people?',
+        audioUrl: '/audio/restaurant-nanmei-sama.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Tell the staff how many people are in your group.',
+        exampleResponse: 'Futari desu',
+    },
+    {
+        id: 'restaurant-go-yoyaku',
+        scenario: 'restaurant',
+        order: 3,
+        japanese: 'ご予約はありますか？',
+        romaji: 'Go yoyaku wa arimasu ka?',
+        english: 'Do you have a reservation?',
+        audioUrl: '/audio/restaurant-go-yoyaku.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Say whether or not you have a reservation.',
+        exampleResponse: 'Hai, yoyaku shite arimasu',
+    },
+    {
+        id: 'restaurant-go-chuumon',
+        scenario: 'restaurant',
+        order: 4,
+        japanese: 'ご注文はお決まりですか？',
+        romaji: 'Go chuumon wa okimari desu ka?',
+        english: 'Are you ready to order?',
+        audioUrl: '/audio/restaurant-go-chuumon.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: "Order a dish you'd like to eat.",
+        exampleResponse: 'Ramen o kudasai',
+    },
+    {
+        id: 'restaurant-onomimono',
+        scenario: 'restaurant',
+        order: 5,
+        japanese: 'お飲み物はいかがですか？',
+        romaji: 'Onomimono wa ikaga desu ka?',
+        english: 'Would you like something to drink?',
+        audioUrl: '/audio/restaurant-onomimono.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: "Order a drink, or say you don't need one.",
+        exampleResponse: 'Mizu o kudasai',
+    },
+    {
+        id: 'restaurant-okaikei',
+        scenario: 'restaurant',
+        order: 6,
+        japanese: 'お会計をお願いします',
+        romaji: 'Okaikei onegaishimasu',
+        english: 'Check please',
+        audioUrl: '/audio/restaurant-okaikei.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Ask for the bill at the end of the meal.',
+        exampleResponse: 'Okaikei onegaishimasu',
+    },
+
+    // --- Shop ------------------------------------------------------------
+    {
+        id: 'shop-irasshaimase',
+        scenario: 'shop',
+        order: 1,
+        japanese: 'いらっしゃいませ',
+        romaji: 'Irasshaimase',
+        english: 'Welcome (said by staff)',
+        audioUrl: '/audio/shop-irasshaimase.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Greet the shop staff back.',
+        exampleResponse: 'Konnichiwa',
+    },
+    {
+        id: 'shop-nanika-osagashi',
+        scenario: 'shop',
+        order: 2,
+        japanese: '何かお探しですか？',
+        romaji: 'Nanika osagashi desu ka?',
+        english: 'Are you looking for something?',
+        audioUrl: '/audio/shop-nanika-osagashi.mp3',
+        difficulty: 'intermediate',
+        practicePrompt:
+            "Say what you're looking for, or that you're just browsing.",
+        exampleResponse: 'Tada miteiru dake desu',
+    },
+    {
+        id: 'shop-ikura-desu-ka',
+        scenario: 'shop',
+        order: 3,
+        japanese: 'これはいくらですか？',
+        romaji: 'Kore wa ikura desu ka?',
+        english: 'How much is this?',
+        audioUrl: '/audio/shop-ikura-desu-ka.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Ask the price of an item you like.',
+        exampleResponse: 'Kore wa ikura desu ka',
+    },
+    {
+        id: 'shop-shichaku',
+        scenario: 'shop',
+        order: 4,
+        japanese: '試着できますか？',
+        romaji: 'Shichaku dekimasu ka?',
+        english: 'Can I try this on?',
+        audioUrl: '/audio/shop-shichaku.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Ask to try something on.',
+        exampleResponse: 'Hai, dekimasu',
+    },
+    {
+        id: 'shop-kore-o-kudasai',
+        scenario: 'shop',
+        order: 5,
+        japanese: 'これをください',
+        romaji: 'Kore o kudasai',
+        english: "I'll take this",
+        audioUrl: '/audio/shop-kore-o-kudasai.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Tell the clerk you want to buy the item.',
+        exampleResponse: 'Kore o kudasai',
+    },
+    {
+        id: 'shop-fukuro',
+        scenario: 'shop',
+        order: 6,
+        japanese: '袋はご入用ですか？',
+        romaji: 'Fukuro wa go-nyouyou desu ka?',
+        english: 'Do you need a bag?',
+        audioUrl: '/audio/shop-fukuro.mp3',
+        difficulty: 'advanced',
+        practicePrompt: 'Say whether or not you need a bag.',
+        exampleResponse: 'Hai, onegaishimasu',
+    },
+
+    // --- Plane -------------------------------------------------------------
+    {
+        id: 'plane-shiito-beruto',
+        scenario: 'plane',
+        order: 1,
+        japanese: 'シートベルトを締めてください',
+        romaji: 'Shiito beruto o shimete kudasai',
+        english: 'Please fasten your seatbelt',
+        audioUrl: '/audio/plane-shiito-beruto.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Acknowledge the flight attendant\u2019s instruction.',
+        exampleResponse: 'Wakarimashita',
+    },
+    {
+        id: 'plane-onomimono',
+        scenario: 'plane',
+        order: 2,
+        japanese: 'お飲み物はいかがですか？',
+        romaji: 'Onomimono wa ikaga desu ka?',
+        english: 'Would you like a drink?',
+        audioUrl: '/audio/plane-onomimono.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Order a drink from the flight attendant.',
+        exampleResponse: 'Orenji juusu o kudasai',
+    },
+    {
+        id: 'plane-nanji-touchaku',
+        scenario: 'plane',
+        order: 3,
+        japanese: '何時に到着しますか？',
+        romaji: 'Nan-ji ni touchaku shimasu ka?',
+        english: 'What time do we arrive?',
+        audioUrl: '/audio/plane-nanji-touchaku.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Ask what time the flight arrives.',
+        exampleResponse: 'Nan-ji ni touchaku shimasu ka',
+    },
+
+    // --- Airport -------------------------------------------------------
+    {
+        id: 'airport-pasupooto-koukuuken',
+        scenario: 'airport',
+        order: 1,
+        japanese: 'パスポートと航空券をお願いします',
+        romaji: 'Pasupooto to koukuuken o onegaishimasu',
+        english: 'Passport and ticket please',
+        audioUrl: '/audio/airport-pasupooto-koukuuken.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Hand over your passport and ticket at check-in.',
+        exampleResponse: 'Hai, douzo',
+    },
+    {
+        id: 'airport-nimotsu',
+        scenario: 'airport',
+        order: 2,
+        japanese: 'お荷物はありますか？',
+        romaji: 'Onimotsu wa arimasu ka?',
+        english: 'Do you have any luggage?',
+        audioUrl: '/audio/airport-nimotsu.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Say how many bags you are checking in.',
+        exampleResponse: 'Kaban ga hitotsu arimasu',
+    },
+    {
+        id: 'airport-tousaku-guchi',
+        scenario: 'airport',
+        order: 3,
+        japanese: '搭乗口はどこですか？',
+        romaji: 'Tousaku-guchi wa doko desu ka?',
+        english: 'Where is the gate?',
+        audioUrl: '/audio/airport-tousaku-guchi.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Ask where your departure gate is.',
+        exampleResponse: 'Tousaku-guchi wa doko desu ka',
+    },
+    {
+        id: 'airport-furaito-okurete',
+        scenario: 'airport',
+        order: 4,
+        japanese: 'フライトは遅れていますか？',
+        romaji: 'Furaito wa okurete imasu ka?',
+        english: 'Is the flight delayed?',
+        audioUrl: '/audio/airport-furaito-okurete.mp3',
+        difficulty: 'advanced',
+        practicePrompt: 'Ask a staff member if your flight is delayed.',
+        exampleResponse: 'Furaito wa okurete imasu ka',
+    },
+
+    // --- Hotel ---------------------------------------------------------
+    {
+        id: 'hotel-yoyaku-shite-arimasu',
+        scenario: 'hotel',
+        order: 1,
+        japanese: '予約してあります',
+        romaji: 'Yoyaku shite arimasu',
+        english: 'I have a reservation',
+        audioUrl: '/audio/hotel-yoyaku-shite-arimasu.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Tell the front desk you have a reservation.',
+        exampleResponse: 'Yoyaku shite arimasu',
+    },
+    {
+        id: 'hotel-chekku-in',
+        scenario: 'hotel',
+        order: 2,
+        japanese: 'チェックインお願いします',
+        romaji: 'Chekku-in onegaishimasu',
+        english: 'Check-in please',
+        audioUrl: '/audio/hotel-chekku-in.mp3',
+        difficulty: 'beginner',
+        practicePrompt: 'Ask the front desk to check you in.',
+        exampleResponse: 'Chekku-in onegaishimasu',
+    },
+    {
+        id: 'hotel-heya-no-kagi',
+        scenario: 'hotel',
+        order: 3,
+        japanese: '部屋の鍵をください',
+        romaji: 'Heya no kagi o kudasai',
+        english: 'Please give me the room key',
+        audioUrl: '/audio/hotel-heya-no-kagi.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Ask for your room key.',
+        exampleResponse: 'Heya no kagi o kudasai',
+    },
+    {
+        id: 'hotel-chekku-auto',
+        scenario: 'hotel',
+        order: 4,
+        japanese: 'チェックアウトは何時ですか？',
+        romaji: 'Chekku-auto wa nan-ji desu ka?',
+        english: 'What time is checkout?',
+        audioUrl: '/audio/hotel-chekku-auto.mp3',
+        difficulty: 'intermediate',
+        practicePrompt: 'Ask the front desk for the checkout time.',
+        exampleResponse: 'Chekku-auto wa nan-ji desu ka',
     },
 ];
