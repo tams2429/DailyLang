@@ -1,0 +1,98 @@
+{
+    "job-interview": {
+        "label": "Job Interview",
+        "phrases": [
+            {
+                "id": "job-interview-1",
+                "scenario": "job-interview",
+                "order": 1,
+                "japanese": "失礼いたします。本日はよろしくお願いいたします。",
+                "romaji": "Shitsurei itashimasu. Honjitsu wa yoroshiku onegai itashimasu.",
+                "english": "Excuse me. Thank you for making time for me today.",
+                "audioUrl": "",
+                "difficulty": "beginner",
+                "practicePrompt": "Greet the applicant politely in return and invite them to take a seat.",
+                "exampleResponse": "Kochira koso, yoroshiku onegai shimasu. Douzo osuwari kudasai.",
+                "exampleResponseJapanese": "こちらこそ、よろしくお願いいたします。どうぞお座りください。",
+                "source": "generated",
+                "generatedAt": "2026-08-15T23:41:02.768Z"
+            },
+            {
+                "id": "job-interview-2",
+                "scenario": "job-interview",
+                "order": 2,
+                "japanese": "簡単に自己紹介をお願いできますか。",
+                "romaji": "Kantan na jikoshoukai o onegai dekimasu ka.",
+                "english": "Could you please give a brief self-introduction?",
+                "audioUrl": "",
+                "difficulty": "intermediate",
+                "practicePrompt": "Introduce yourself with your name and express your gratitude for the opportunity.",
+                "exampleResponse": "Hajimemashite, Tanaka Taro to moushimasu. Honjitsu wa yoroshiku onegai shimasu.",
+                "exampleResponseJapanese": "初めまして、田中太郎と申します。本日はよろしくお願いいたします。",
+                "source": "generated",
+                "generatedAt": "2026-08-15T23:41:02.768Z"
+            },
+            {
+                "id": "job-interview-3",
+                "scenario": "job-interview",
+                "order": 3,
+                "japanese": "弊社を志望された理由を教えてください。",
+                "romaji": "Heisha o shibou sareta riyuu o oshiete kudasai.",
+                "english": "Please tell us your reason for applying to our company.",
+                "audioUrl": "",
+                "difficulty": "advanced",
+                "practicePrompt": "Explain that you were drawn to the company's vision and technological strengths.",
+                "exampleResponse": "Kisha no bijon to takai gijutsuryoku ni miryoku o kanjita kara desu.",
+                "exampleResponseJapanese": "貴社のビジョンと高い技術力に魅力を感じたからです。",
+                "source": "generated",
+                "generatedAt": "2026-08-15T23:41:02.768Z"
+            },
+            {
+                "id": "job-interview-4",
+                "scenario": "job-interview",
+                "order": 4,
+                "japanese": "あなたの長所と短所は何ですか。",
+                "romaji": "Anata no chousho to tansho wa nan desu ka.",
+                "english": "What are your strengths and weaknesses?",
+                "audioUrl": "",
+                "difficulty": "intermediate",
+                "practicePrompt": "State that your strength is persistence and your weakness is worrying too much.",
+                "exampleResponse": "Chousho wa nebaritsuyoi tokoro de, tansho wa shinpaishou na tokoro desu.",
+                "exampleResponseJapanese": "長所は粘り強いところで、短所は心配性なところです。",
+                "source": "generated",
+                "generatedAt": "2026-08-15T23:41:02.768Z"
+            },
+            {
+                "id": "job-interview-5",
+                "scenario": "job-interview",
+                "order": 5,
+                "japanese": "何か質問はありますか。",
+                "romaji": "Nanika shitsumon wa arimasu ka.",
+                "english": "Do you have any questions for us?",
+                "audioUrl": "",
+                "difficulty": "beginner",
+                "practicePrompt": "Ask politely about the training program available after joining the company.",
+                "exampleResponse": "Nyuushagou no kenshuu seido ni tsuite oshiete itadakemasu ka.",
+                "exampleResponseJapanese": "入社後の研修制度について教えていただけますか。",
+                "source": "generated",
+                "generatedAt": "2026-08-15T23:41:02.768Z"
+            },
+            {
+                "id": "job-interview-6",
+                "scenario": "job-interview",
+                "order": 6,
+                "japanese": "本日はお時間をいただき、ありがとうございました。",
+                "romaji": "Honjitsu wa ojikan o itadaki, arigatou gozaimashita.",
+                "english": "Thank you very much for your time today.",
+                "audioUrl": "",
+                "difficulty": "advanced",
+                "practicePrompt": "As the interviewer, thank them for coming and mention that results will be sent next week.",
+                "exampleResponse": "Kochira koso arigatou gozaimashita. Kekka wa raishuu renraku itashimasu.",
+                "exampleResponseJapanese": "こちらこそありがとうございました。結果は来週ご連絡いたします。",
+                "source": "generated",
+                "generatedAt": "2026-08-15T23:41:02.768Z"
+            }
+        ],
+        "updatedAt": "2026-08-15T23:41:02.769Z"
+    }
+}

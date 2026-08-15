@@ -29,15 +29,33 @@ function App() {
     }, [customScenarios]);
     const scenarioMeta = allScenarios.find((s) => s.id === currentScenario);
     const [scenarioSearch, setScenarioSearch] = useState('');
+    const [isAddingScenario, setIsAddingScenario] = useState(false);
+    const NEW_SCENARIO_VALUE = '__new__';
 
     useEffect(() => {
         loadPhrases();
     }, [loadPhrases]);
 
+    const handleScenarioSelect = (value: string) => {
+        if (value === NEW_SCENARIO_VALUE) {
+            setIsAddingScenario(true);
+            return;
+        }
+        setScenario(value);
+    };
+
     const handleGenerate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!scenarioSearch.trim()) return;
         await generateScenario(scenarioSearch.trim());
+        setScenarioSearch('');
+        if (!usePhraseStore.getState().generateError) {
+            setIsAddingScenario(false);
+        }
+    };
+
+    const handleCancelAddScenario = () => {
+        setIsAddingScenario(false);
         setScenarioSearch('');
     };
 
@@ -59,53 +77,89 @@ function App() {
                 </header>
 
                 <div className="flex w-full max-w-xl flex-col items-center gap-2">
-                    <label
-                        htmlFor="scenario-select"
-                        className="text-sm font-medium text-slate-500"
-                    >
-                        Scenario
-                    </label>
-                    <select
-                        id="scenario-select"
-                        value={currentScenario}
-                        onChange={(e) => setScenario(e.target.value)}
-                        className="w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-center font-medium text-slate-700 focus:border-rose-400 focus:outline-none"
-                    >
-                        {allScenarios.map((scenario) => (
-                            <option key={scenario.id} value={scenario.id}>
-                                {scenario.label}
-                            </option>
-                        ))}
-                    </select>
-                    {scenarioMeta && (
-                        <p className="text-center text-xs text-slate-400">
-                            {scenarioMeta.description}
-                        </p>
+                    {isAddingScenario ? (
+                        <>
+                            <label
+                                htmlFor="scenario-search"
+                                className="text-sm font-medium text-slate-500"
+                            >
+                                Add new scenario
+                            </label>
+                            <form
+                                onSubmit={handleGenerate}
+                                className="flex w-full gap-2"
+                            >
+                                <input
+                                    id="scenario-search"
+                                    type="text"
+                                    autoFocus
+                                    value={scenarioSearch}
+                                    onChange={(e) =>
+                                        setScenarioSearch(e.target.value)
+                                    }
+                                    placeholder="Request a new scenario, e.g. 'job interview'"
+                                    className="flex-1 rounded-full border border-slate-300 bg-white px-4 py-2 text-slate-700 focus:border-rose-400 focus:outline-none"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        generating || !scenarioSearch.trim()
+                                    }
+                                    className="rounded-full bg-slate-900 px-5 py-2 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {generating ? 'Generating...' : 'Generate'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleCancelAddScenario}
+                                    disabled={generating}
+                                    className="rounded-full border border-slate-300 px-4 py-2 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                            </form>
+                            {generateError && (
+                                <p className="text-sm text-rose-600">
+                                    {generateError}
+                                </p>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <label
+                                htmlFor="scenario-select"
+                                className="text-sm font-medium text-slate-500"
+                            >
+                                Scenario
+                            </label>
+                            <select
+                                id="scenario-select"
+                                value={currentScenario}
+                                onChange={(e) =>
+                                    handleScenarioSelect(e.target.value)
+                                }
+                                className="w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-center font-medium text-slate-700 focus:border-rose-400 focus:outline-none"
+                            >
+                                {allScenarios.map((scenario) => (
+                                    <option
+                                        key={scenario.id}
+                                        value={scenario.id}
+                                    >
+                                        {scenario.label}
+                                    </option>
+                                ))}
+                                <option value={NEW_SCENARIO_VALUE}>
+                                    + Add new scenario...
+                                </option>
+                            </select>
+                            {scenarioMeta && (
+                                <p className="text-center text-xs text-slate-400">
+                                    {scenarioMeta.description}
+                                </p>
+                            )}
+                        </>
                     )}
                 </div>
-
-                <form
-                    onSubmit={handleGenerate}
-                    className="flex w-full max-w-xl gap-2"
-                >
-                    <input
-                        type="text"
-                        value={scenarioSearch}
-                        onChange={(e) => setScenarioSearch(e.target.value)}
-                        placeholder="Request a new scenario, e.g. 'job interview'"
-                        className="flex-1 rounded-full border border-slate-300 bg-white px-4 py-2 text-slate-700 focus:border-rose-400 focus:outline-none"
-                    />
-                    <button
-                        type="submit"
-                        disabled={generating || !scenarioSearch.trim()}
-                        className="rounded-full bg-slate-900 px-5 py-2 font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {generating ? 'Generating...' : 'Generate'}
-                    </button>
-                </form>
-                {generateError && (
-                    <p className="text-sm text-rose-600">{generateError}</p>
-                )}
 
                 {status === 'loading' && (
                     <p className="text-slate-500">Loading phrases...</p>

@@ -3,7 +3,7 @@ import type { Phrase } from './data/phrases';
 // Free-tier Gemini model via the plain REST API (no SDK dependency needed —
 // Bun's built-in fetch is enough). Get a free API key at
 // https://aistudio.google.com/apikey and set GEMINI_API_KEY in backend/.env.
-const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.6-flash';
 
 interface GeneratedEntry {
     japanese: string;
@@ -12,6 +12,7 @@ interface GeneratedEntry {
     difficulty: 'beginner' | 'intermediate' | 'advanced';
     practicePrompt: string;
     exampleResponse: string;
+    exampleResponseJapanese: string;
 }
 
 function buildPrompt(label: string, count: number): string {
@@ -25,7 +26,8 @@ For each phrase, provide:
 - english: an English translation
 - difficulty: one of "beginner", "intermediate", or "advanced"
 - practicePrompt: a short instruction telling a learner what to say back in response
-- exampleResponse: a correct example reply, written in romaji`;
+- exampleResponse: a correct example reply, written in romaji
+- exampleResponseJapanese: the same example reply written in Japanese script (hiragana/katakana/kanji as natural)`;
 }
 
 export async function generatePhrasesForScenario(
@@ -41,7 +43,7 @@ export async function generatePhrasesForScenario(
     }
 
     const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
         {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -72,6 +74,7 @@ export async function generatePhrasesForScenario(
                                 },
                                 practicePrompt: { type: 'STRING' },
                                 exampleResponse: { type: 'STRING' },
+                                exampleResponseJapanese: { type: 'STRING' },
                             },
                             required: [
                                 'japanese',
@@ -80,6 +83,7 @@ export async function generatePhrasesForScenario(
                                 'difficulty',
                                 'practicePrompt',
                                 'exampleResponse',
+                                'exampleResponseJapanese',
                             ],
                         },
                     },
@@ -122,6 +126,7 @@ export async function generatePhrasesForScenario(
         difficulty: entry.difficulty,
         practicePrompt: entry.practicePrompt,
         exampleResponse: entry.exampleResponse,
+        exampleResponseJapanese: entry.exampleResponseJapanese,
         source: 'generated',
         generatedAt: now,
     }));

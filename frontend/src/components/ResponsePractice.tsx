@@ -6,6 +6,8 @@ interface ResponsePracticeProps {
     phrase: Phrase;
 }
 
+type InputMode = 'romaji' | 'japanese';
+
 // Loosely normalize responses before comparing so that punctuation, casing,
 // and extra whitespace don't cause a correct answer to be marked wrong.
 function normalize(input: string): string {
@@ -16,12 +18,43 @@ function normalize(input: string): string {
         .trim();
 }
 
+// Masks a romaji answer word-by-word, revealing each word's first letter.
+function buildRomajiHint(answer: string): string {
+    return answer
+        .split(' ')
+        .filter(Boolean)
+        .map((word) =>
+            [
+                word[0].toUpperCase(),
+                ...word
+                    .slice(1)
+                    .split('')
+                    .map(() => '_'),
+            ].join(' '),
+        )
+        .join('   ');
+}
+
+// Masks a Japanese answer character-by-character, revealing the first
+// character of the string (Japanese doesn't reliably use spaces between
+// words, so we mask per-character instead of per-word).
+function buildJapaneseHint(answer: string): string {
+    const chars = Array.from(answer);
+    return chars
+        .map((ch, index) => {
+            if (index === 0) return ch;
+            return /[\p{L}\p{N}]/u.test(ch) ? '＿' : ch;
+        })
+        .join(' ');
+}
+
 const ADVANCE_DELAY_MS = 1400;
 
 export function ResponsePractice({ phrase }: ResponsePracticeProps) {
     const [text, setText] = useState('');
     const [showHint, setShowHint] = useState(false);
     const [revealAnswer, setRevealAnswer] = useState(false);
+    const [inputMode, setInputMode] = useState<InputMode>('romaji');
     const [result, setResult] = useState<'correct' | 'incorrect' | null>(null);
     const advanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const submitting = usePhraseStore((state) => state.submitting);
@@ -44,19 +77,15 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
         };
     }, []);
 
-    const hint = phrase.exampleResponse
-        .split(' ')
-        .filter(Boolean)
-        .map((word) =>
-            [
-                word[0].toUpperCase(),
-                ...word
-                    .slice(1)
-                    .split('')
-                    .map(() => '_'),
-            ].join(' '),
-        )
-        .join('   ');
+    const expectedAnswer =
+        inputMode === 'japanese'
+            ? phrase.exampleResponseJapanese
+            : phrase.exampleResponse;
+
+    const hint =
+        inputMode === 'japanese'
+            ? buildJapaneseHint(expectedAnswer)
+            : buildRomajiHint(expectedAnswer);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,8 +94,7 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
 
         await submitResponse(trimmed);
 
-        const isCorrect =
-            normalize(trimmed) === normalize(phrase.exampleResponse);
+        const isCorrect = normalize(trimmed) === normalize(expectedAnswer);
 
         if (isCorrect) {
             setResult('correct');
@@ -84,15 +112,49 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
 
     return (
         <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
-            <p className="mb-3 text-sm font-medium text-slate-500">
-                Practice prompt:{' '}
-                <span className="text-slate-700">{phrase.practicePrompt}</span>
-            </p>
+            <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-slate-500">
+                    Practice prompt:{' '}
+                    <span className="text-slate-700">
+                        {phrase.practicePrompt}
+                    </span>
+                </p>
+                <div className="flex shrink-0 rounded-full border border-slate-300 bg-slate-50 p-0.5 text-xs font-medium">
+                    <button
+                        type="button"
+                        onClick={() => setInputMode('romaji')}
+                        aria-pressed={inputMode === 'romaji'}
+                        className={`rounded-full px-3 py-1 transition ${
+                            inputMode === 'romaji'
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        Romaji
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setInputMode('japanese')}
+                        aria-pressed={inputMode === 'japanese'}
+                        className={`rounded-full px-3 py-1 transition ${
+                            inputMode === 'japanese'
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                    >
+                        日本語
+                    </button>
+                </div>
+            </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                 <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="Type your response in Japanese..."
+                    placeholder={
+                        inputMode === 'japanese'
+                            ? '日本語で答えを入力してください...'
+                            : 'Type your response in romaji...'
+                    }
                     rows={3}
                     className="w-full rounded-lg border border-slate-200 p-3 text-lg focus:border-rose-400 focus:outline-none"
                 />
@@ -115,7 +177,7 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
                 {showHint && (
                     <div className="flex items-center justify-center gap-2">
                         <p className="text-center text-lg text-slate-500">
-                            {revealAnswer ? phrase.exampleResponse : hint}
+                            {revealAnswer ? expectedAnswer : hint}
                         </p>
                         <button
                             type="button"
