@@ -47,7 +47,10 @@ export async function generatePhrasesForScenario(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [
-                    { role: 'user', parts: [{ text: buildPrompt(label, count) }] },
+                    {
+                        role: 'user',
+                        parts: [{ text: buildPrompt(label, count) }],
+                    },
                 ],
                 generationConfig: {
                     responseMimeType: 'application/json',

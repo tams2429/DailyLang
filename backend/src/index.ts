@@ -1,5 +1,9 @@
 import { phrases } from './data/phrases';
-import { getAllCachedScenarios, getCachedScenario, setCachedScenario } from './cache';
+import {
+    getAllCachedScenarios,
+    getCachedScenario,
+    setCachedScenario,
+} from './cache';
 import { generatePhrasesForScenario } from './gemini';
 
 const PORT = Number(process.env.PORT ?? 4000);
@@ -115,10 +119,7 @@ Bun.serve({
             }
 
             try {
-                const generated = await generatePhrasesForScenario(
-                    slug,
-                    label,
-                );
+                const generated = await generatePhrasesForScenario(slug, label);
                 await setCachedScenario(slug, label, generated);
                 allPhrases = [
                     ...allPhrases.filter((p) => p.scenario !== slug),
