@@ -39,3 +39,37 @@ export function fetchPracticeHistory(
         `/api/phrases/${phraseId}/responses`,
     );
 }
+
+export interface GeneratePhrasesResult {
+    scenario: string;
+    label: string;
+    phrases: Phrase[];
+    cached: boolean;
+}
+
+// Requests phrases for a scenario from the backend, which serves them from
+// its JSON cache if already generated, or calls the Gemini API and caches
+// the result. Pass force to bypass the cache and regenerate.
+export function generatePhrases(
+    scenario: string,
+    options?: { label?: string; force?: boolean },
+): Promise<GeneratePhrasesResult> {
+    return request<GeneratePhrasesResult>('/api/phrases/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+            scenario,
+            label: options?.label,
+            force: options?.force ?? false,
+        }),
+    });
+}
+
+export interface GeneratedScenarioMeta {
+    id: string;
+    label: string;
+    description: string;
+}
+
+export function fetchGeneratedScenarios(): Promise<GeneratedScenarioMeta[]> {
+    return request<GeneratedScenarioMeta[]>('/api/scenarios/generated');
+}
