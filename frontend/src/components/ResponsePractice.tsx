@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Phrase } from '../types';
 import { usePhraseStore } from '../store/usePhraseStore';
 
@@ -6,18 +6,43 @@ interface ResponsePracticeProps {
     phrase: Phrase;
 }
 
+// Loosely normalize responses before comparing so that punctuation, casing,
+// and extra whitespace don't cause a correct answer to be marked wrong.
+function normalize(input: string): string {
+    return input
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}\s]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+const ADVANCE_DELAY_MS = 1400;
+
 export function ResponsePractice({ phrase }: ResponsePracticeProps) {
     const [text, setText] = useState('');
     const [showHint, setShowHint] = useState(false);
+    const [revealAnswer, setRevealAnswer] = useState(false);
+    const [result, setResult] = useState<'correct' | 'incorrect' | null>(null);
+    const advanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const submitting = usePhraseStore((state) => state.submitting);
     const lastSubmittedText = usePhraseStore(
         (state) => state.lastSubmittedText,
     );
     const submitResponse = usePhraseStore((state) => state.submitResponse);
+    const nextPhrase = usePhraseStore((state) => state.nextPhrase);
 
     useEffect(() => {
         setShowHint(false);
+        setRevealAnswer(false);
+        setResult(null);
+        if (advanceTimeout.current) clearTimeout(advanceTimeout.current);
     }, [phrase.id]);
+
+    useEffect(() => {
+        return () => {
+            if (advanceTimeout.current) clearTimeout(advanceTimeout.current);
+        };
+    }, []);
 
     const hint = phrase.exampleResponse
         .split(' ')
@@ -35,9 +60,26 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!text.trim()) return;
-        await submitResponse(text.trim());
-        setText('');
+        const trimmed = text.trim();
+        if (!trimmed) return;
+
+        await submitResponse(trimmed);
+
+        const isCorrect =
+            normalize(trimmed) === normalize(phrase.exampleResponse);
+
+        if (isCorrect) {
+            setResult('correct');
+            setShowHint(false);
+            setRevealAnswer(false);
+            setText('');
+            advanceTimeout.current = setTimeout(() => {
+                nextPhrase();
+            }, ADVANCE_DELAY_MS);
+        } else {
+            setResult('incorrect');
+            setShowHint(true);
+        }
     };
 
     return (
@@ -71,10 +113,69 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
                     </button>
                 </div>
                 {showHint && (
-                    <p className="text-center text-lg text-slate-500">{hint}</p>
+                    <div className="flex items-center justify-center gap-2">
+                        <p className="text-center text-lg text-slate-500">
+                            {revealAnswer ? phrase.exampleResponse : hint}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => setRevealAnswer((prev) => !prev)}
+                            aria-label={
+                                revealAnswer ? 'Hide answer' : 'Reveal answer'
+                            }
+                            aria-pressed={revealAnswer}
+                            title={
+                                revealAnswer ? 'Hide answer' : 'Reveal answer'
+                            }
+                            className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        >
+                            {revealAnswer ? (
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-5 w-5"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                    <line x1="3" y1="21" x2="21" y2="3" />
+                                </svg>
+                            ) : (
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="h-5 w-5"
+                                    aria-hidden="true"
+                                >
+                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                 )}
             </form>
-            {lastSubmittedText && (
+            {result === 'correct' && (
+                <p className="mt-3 text-sm font-medium text-emerald-600">
+                    ✓ Correct! Moving on to the next phrase...
+                </p>
+            )}
+            {result === 'incorrect' && (
+                <p className="mt-3 text-sm font-medium text-rose-600">
+                    ✗ Not quite — here's a hint to help you.
+                </p>
+            )}
+            {result === null && lastSubmittedText && (
                 <p className="mt-3 text-sm text-emerald-600">
                     Saved your response: "{lastSubmittedText}"
                 </p>
