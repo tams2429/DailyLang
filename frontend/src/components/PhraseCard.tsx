@@ -41,7 +41,7 @@ export function PhraseCard({ phrase }: PhraseCardProps) {
             </p>
 
             <div className="mt-6 flex justify-center">
-                <AudioPlayer src={phrase.audioUrl} />
+                <AudioPlayer src={phrase.audioUrl} text={phrase.japanese} />
             </div>
         </div>
     );

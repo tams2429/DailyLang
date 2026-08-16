@@ -94,5 +94,101 @@
             }
         ],
         "updatedAt": "2026-08-15T23:41:02.769Z"
+    },
+    "train-station": {
+        "label": "Train station",
+        "phrases": [
+            {
+                "id": "train-station-1",
+                "scenario": "train-station",
+                "order": 1,
+                "japanese": "すみません、券売機はどこですか？",
+                "romaji": "Sumimasen, kenbaiki wa doko desu ka?",
+                "english": "Excuse me, where is the ticket vending machine?",
+                "audioUrl": "",
+                "difficulty": "beginner",
+                "practicePrompt": "Point out that it is over there.",
+                "exampleResponse": "Achira desu.",
+                "exampleResponseJapanese": "あちらです。",
+                "source": "generated",
+                "generatedAt": "2026-08-16T08:40:02.524Z"
+            },
+            {
+                "id": "train-station-2",
+                "scenario": "train-station",
+                "order": 2,
+                "japanese": "東京駅までの切符を1枚ください。",
+                "romaji": "Tōkyō-eki made no kippu wo ichimai kudasai.",
+                "english": "One ticket to Tokyo Station, please.",
+                "audioUrl": "",
+                "difficulty": "beginner",
+                "practicePrompt": "Say that will be 200 yen.",
+                "exampleResponse": "Ni-hyaku en desu.",
+                "exampleResponseJapanese": "200円です。",
+                "source": "generated",
+                "generatedAt": "2026-08-16T08:40:02.524Z"
+            },
+            {
+                "id": "train-station-3",
+                "scenario": "train-station",
+                "order": 3,
+                "japanese": "この電車は新宿に行きますか？",
+                "romaji": "Kono densha wa Shinjuku ni ikimasu ka?",
+                "english": "Does this train go to Shinjuku?",
+                "audioUrl": "",
+                "difficulty": "intermediate",
+                "practicePrompt": "Confirm that it does go to Shinjuku.",
+                "exampleResponse": "Hai, ikimasu yo.",
+                "exampleResponseJapanese": "はい、行きますよ。",
+                "source": "generated",
+                "generatedAt": "2026-08-16T08:40:02.524Z"
+            },
+            {
+                "id": "train-station-4",
+                "scenario": "train-station",
+                "order": 4,
+                "japanese": "次の急行は何番線から出ますか？",
+                "romaji": "Tsugi no kyūkō wa nan-bansen kara demasu ka?",
+                "english": "Which platform does the next express train depart from?",
+                "audioUrl": "",
+                "difficulty": "intermediate",
+                "practicePrompt": "Answer that it departs from platform 2.",
+                "exampleResponse": "Ni-bansen kara demasu.",
+                "exampleResponseJapanese": "2番線から出ます。",
+                "source": "generated",
+                "generatedAt": "2026-08-16T08:40:02.524Z"
+            },
+            {
+                "id": "train-station-5",
+                "scenario": "train-station",
+                "order": 5,
+                "japanese": "事故の影響で遅延は発生していますか？",
+                "romaji": "Jiko no eikyō de chien wa hassei shite imasu ka?",
+                "english": "Are there any delays due to an accident?",
+                "audioUrl": "",
+                "difficulty": "advanced",
+                "practicePrompt": "Say that the trains are running about 10 minutes late.",
+                "exampleResponse": "Juppun hodo okurete imasu.",
+                "exampleResponseJapanese": "10分ほど遅れています。",
+                "source": "generated",
+                "generatedAt": "2026-08-16T08:40:02.524Z"
+            },
+            {
+                "id": "train-station-6",
+                "scenario": "train-station",
+                "order": 6,
+                "japanese": "ICカードのチャージが不足しているのですが、精算機はどこですか？",
+                "romaji": "Aisī kādo no chāji ga fusoku shite iru no desu ga, seisanki wa doko desu ka?",
+                "english": "My IC card balance is insufficient; where is the fare adjustment machine?",
+                "audioUrl": "",
+                "difficulty": "advanced",
+                "practicePrompt": "Direct them to the machine next to the ticket gate.",
+                "exampleResponse": "Kaisatsuguchi no tonari ni arimasu.",
+                "exampleResponseJapanese": "改札口の隣にあります。",
+                "source": "generated",
+                "generatedAt": "2026-08-16T08:40:02.524Z"
+            }
+        ],
+        "updatedAt": "2026-08-16T08:40:02.525Z"
     }
 }

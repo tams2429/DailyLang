@@ -2,15 +2,33 @@ import { useRef, useState } from 'react';
 
 interface AudioPlayerProps {
     src: string;
+    text?: string;
 }
 
-export function AudioPlayer({ src }: AudioPlayerProps) {
+function speak(text: string): boolean {
+    if (!('speechSynthesis' in window)) return false;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    window.speechSynthesis.speak(utterance);
+    return true;
+}
+
+export function AudioPlayer({ src, text }: AudioPlayerProps) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [error, setError] = useState(false);
 
     const play = () => {
         setError(false);
-        audioRef.current?.play().catch(() => setError(true));
+
+        if (!src) {
+            if (!text || !speak(text)) setError(true);
+            return;
+        }
+
+        audioRef.current?.play().catch(() => {
+            if (!text || !speak(text)) setError(true);
+        });
     };
 
     return (
@@ -23,16 +41,18 @@ export function AudioPlayer({ src }: AudioPlayerProps) {
                 <span aria-hidden>▶</span>
                 Play phrase
             </button>
-            <audio
-                ref={audioRef}
-                src={src}
-                onError={() => setError(true)}
-                preload="none"
-            />
+            {src && (
+                <audio
+                    ref={audioRef}
+                    src={src}
+                    onError={() => setError(true)}
+                    preload="none"
+                />
+            )}
             {error && (
                 <p className="text-sm text-amber-600">
-                    Audio not available yet. Add a matching file under{' '}
-                    <code>backend/public/audio</code>.
+                    Audio not available. Your browser may not support speech
+                    synthesis.
                 </p>
             )}
         </div>
