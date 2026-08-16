@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Phrase } from '../types';
 import { usePhraseStore } from '../store/usePhraseStore';
+import {
+    isSpeechRecognitionSupported,
+    useSpeechRecognition,
+} from '../hooks/useSpeechRecognition';
 
 interface ResponsePracticeProps {
     phrase: Phrase;
@@ -10,12 +14,17 @@ type InputMode = 'romaji' | 'japanese';
 
 // Loosely normalize responses before comparing so that punctuation, casing,
 // and extra whitespace don't cause a correct answer to be marked wrong.
-function normalize(input: string): string {
-    return input
+// Japanese doesn't use spaces between words, so when comparing Japanese
+// text (e.g. from speech recognition, which may insert spaces after commas
+// or pauses) whitespace is stripped entirely instead of just collapsed.
+function normalize(input: string, mode: InputMode): string {
+    const stripped = input
         .toLowerCase()
         .replace(/[^\p{L}\p{N}\s]/gu, '')
-        .replace(/\s+/g, ' ')
         .trim();
+    return mode === 'japanese'
+        ? stripped.replace(/\s+/g, '')
+        : stripped.replace(/\s+/g, ' ');
 }
 
 // Masks a romaji answer word-by-word, revealing each word's first letter.
@@ -33,6 +42,17 @@ function buildRomajiHint(answer: string): string {
             ].join(' '),
         )
         .join('   ');
+}
+
+// Speaks Japanese text aloud via the browser's speech synthesis API, if
+// available (mirrors the approach used by AudioPlayer for phrase playback).
+function speakJapanese(text: string): boolean {
+    if (!('speechSynthesis' in window)) return false;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    window.speechSynthesis.speak(utterance);
+    return true;
 }
 
 // Masks a Japanese answer character-by-character, revealing the first
@@ -56,6 +76,7 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
     const [revealAnswer, setRevealAnswer] = useState(false);
     const [inputMode, setInputMode] = useState<InputMode>('romaji');
     const [result, setResult] = useState<'correct' | 'incorrect' | null>(null);
+    const [speakError, setSpeakError] = useState(false);
     const advanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const submitting = usePhraseStore((state) => state.submitting);
     const lastSubmittedText = usePhraseStore(
@@ -63,6 +84,21 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
     );
     const submitResponse = usePhraseStore((state) => state.submitResponse);
     const nextPhrase = usePhraseStore((state) => state.nextPhrase);
+
+    // Speech recognition only transcribes to Japanese script, so using the
+    // mic switches input mode to 日本語 and fills the textarea as you speak.
+    const {
+        isListening,
+        error: speechError,
+        start: startListening,
+        stop: stopListening,
+    } = useSpeechRecognition({
+        lang: 'ja-JP',
+        onResult: (transcript) => {
+            setInputMode('japanese');
+            setText(transcript);
+        },
+    });
 
     useEffect(() => {
         setShowHint(false);
@@ -94,7 +130,9 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
 
         await submitResponse(trimmed);
 
-        const isCorrect = normalize(trimmed) === normalize(expectedAnswer);
+        const isCorrect =
+            normalize(trimmed, inputMode) ===
+            normalize(expectedAnswer, inputMode);
 
         if (isCorrect) {
             setResult('correct');
@@ -147,17 +185,58 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
                 </div>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-                <textarea
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder={
-                        inputMode === 'japanese'
-                            ? '日本語で答えを入力してください...'
-                            : 'Type your response in romaji...'
-                    }
-                    rows={3}
-                    className="w-full rounded-lg border border-slate-200 p-3 text-lg focus:border-rose-400 focus:outline-none"
-                />
+                <div className="relative">
+                    <textarea
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        placeholder={
+                            inputMode === 'japanese'
+                                ? '日本語で答えを入力してください...'
+                                : 'Type your response in romaji...'
+                        }
+                        rows={3}
+                        className="w-full rounded-lg border border-slate-200 p-3 pr-12 text-lg focus:border-rose-400 focus:outline-none"
+                    />
+                    {isSpeechRecognitionSupported && (
+                        <button
+                            type="button"
+                            onClick={() =>
+                                isListening ? stopListening() : startListening()
+                            }
+                            aria-pressed={isListening}
+                            title={
+                                isListening
+                                    ? 'Stop listening'
+                                    : 'Speak your answer'
+                            }
+                            className={`absolute right-2 top-2 rounded-full p-2 transition ${
+                                isListening
+                                    ? 'animate-pulse bg-rose-500 text-white'
+                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                            }`}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                            >
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" />
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                <line x1="12" y1="19" x2="12" y2="23" />
+                                <line x1="8" y1="23" x2="16" y2="23" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+                {speechError && (
+                    <p className="text-sm text-rose-600">{speechError}</p>
+                )}
                 <div className="flex items-center justify-between">
                     <button
                         type="button"
@@ -179,6 +258,38 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
                         <p className="text-center text-lg text-slate-500">
                             {revealAnswer ? expectedAnswer : hint}
                         </p>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSpeakError(false);
+                                if (
+                                    !speakJapanese(
+                                        phrase.exampleResponseJapanese,
+                                    )
+                                ) {
+                                    setSpeakError(true);
+                                }
+                            }}
+                            aria-label="Play answer audio"
+                            title="Play answer audio"
+                            className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="h-5 w-5"
+                                aria-hidden="true"
+                            >
+                                <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+                                <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+                                <path d="M18.5 5.5a9 9 0 0 1 0 13" />
+                            </svg>
+                        </button>
                         <button
                             type="button"
                             onClick={() => setRevealAnswer((prev) => !prev)}
@@ -225,6 +336,12 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
                             )}
                         </button>
                     </div>
+                )}
+                {speakError && (
+                    <p className="text-center text-sm text-amber-600">
+                        Audio playback not available. Your browser may not
+                        support speech synthesis.
+                    </p>
                 )}
             </form>
             {result === 'correct' && (
