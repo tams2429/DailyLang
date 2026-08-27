@@ -9,5 +9,8 @@
     },
     "devDependencies": {
         "@types/bun": "latest"
+    },
+    "dependencies": {
+        "postgres": "^3.4.9"
     }
 }

@@ -1,7 +1,9 @@
 import { phrases } from './data/phrases';
 import {
+    addPracticeResponse,
     getAllCachedScenarios,
     getCachedScenario,
+    getPracticeResponses,
     setCachedScenario,
 } from './cache';
 import { generatePhrasesForScenario } from './gemini';
@@ -33,13 +35,6 @@ function json(data: unknown, init: ResponseInit = {}) {
         },
     });
 }
-
-// In-memory store of practice responses, keyed by phrase id.
-// Resets whenever the server restarts (self-contained, no DB for now).
-const practiceResponses: Record<
-    string,
-    { text: string; submittedAt: string }[]
-> = {};
 
 // Hand-written seed phrases plus any previously LLM-generated scenarios
 // loaded from the JSON cache on disk. Mutated in place as new scenarios are
@@ -170,9 +165,7 @@ Bun.serve({
                     { status: 400 },
                 );
 
-            const entry = { text, submittedAt: new Date().toISOString() };
-            practiceResponses[phraseId] ??= [];
-            practiceResponses[phraseId].push(entry);
+            const entry = await addPracticeResponse(phraseId, text);
 
             return json({ ok: true, phraseId, entry });
         }
@@ -182,7 +175,7 @@ Bun.serve({
             /^\/api\/phrases\/([\w-]+)\/responses$/,
         );
         if (historyMatch && req.method === 'GET') {
-            return json(practiceResponses[historyMatch[1]] ?? []);
+            return json(await getPracticeResponses(historyMatch[1]));
         }
 
         // Serve preprogrammed audio files from ./public/audio
