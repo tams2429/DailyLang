@@ -4,6 +4,8 @@ import { scenarios } from '../data/scenarios';
 
 interface PhraseCardProps {
     phrase: Phrase;
+    onDelete?: () => void;
+    deleting?: boolean;
 }
 
 const difficultyColor: Record<Phrase['difficulty'], string> = {
@@ -12,13 +14,26 @@ const difficultyColor: Record<Phrase['difficulty'], string> = {
     advanced: 'bg-rose-100 text-rose-700',
 };
 
-export function PhraseCard({ phrase }: PhraseCardProps) {
+export function PhraseCard({ phrase, onDelete, deleting }: PhraseCardProps) {
     const scenarioLabel =
         scenarios.find((s) => s.id === phrase.scenario)?.label ??
         phrase.scenario;
 
     return (
-        <div className="w-full max-w-xl rounded-2xl bg-white p-8 shadow-lg ring-1 ring-slate-200">
+        <div className="relative w-full max-w-xl rounded-2xl bg-white p-8 shadow-lg ring-1 ring-slate-200">
+            {phrase.source === 'generated' && onDelete && (
+                <button
+                    type="button"
+                    onClick={onDelete}
+                    disabled={deleting}
+                    aria-label="Delete this phrase"
+                    title="Delete this phrase"
+                    className="absolute right-4 top-4 rounded-full p-1.5 text-slate-300 transition hover:bg-rose-50 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    {deleting ? '…' : '🗑'}
+                </button>
+            )}
+
             <div className="mb-4 flex items-center justify-between">
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-500">
                     {scenarioLabel}

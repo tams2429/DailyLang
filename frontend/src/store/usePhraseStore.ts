@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import {
+    deletePhrase,
     fetchGeneratedScenarios,
     fetchPhrases,
     generatePhrases,
+    restorePhrase,
     submitPracticeResponse,
 } from '../api/client';
 import { scenarios } from '../data/scenarios';
@@ -32,6 +34,12 @@ interface PhraseStore {
     generating: boolean;
     generateError: string | null;
 
+    /** The most recently deleted phrase, kept around so it can be undone */
+    deletedPhrase: Phrase | null;
+    deleting: boolean;
+    deleteError: string | null;
+    undoing: boolean;
+
     currentPhrase: () => Phrase | null;
     loadPhrases: () => Promise<void>;
     nextPhrase: () => void;
@@ -39,6 +47,8 @@ interface PhraseStore {
     setScenario: (scenario: ScenarioId) => void;
     submitResponse: (text: string) => Promise<void>;
     generateScenario: (input: string, force?: boolean) => Promise<void>;
+    deleteCurrentPhrase: () => Promise<void>;
+    undoDelete: () => Promise<void>;
 }
 
 export const usePhraseStore = create<PhraseStore>((set, get) => ({
@@ -53,6 +63,10 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
     customScenarios: [],
     generating: false,
     generateError: null,
+    deletedPhrase: null,
+    deleting: false,
+    deleteError: null,
+    undoing: false,
 
     currentPhrase: () => get().scenarioPhrases[get().currentIndex] ?? null,
 
@@ -85,12 +99,14 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
                 state.scenarioPhrases.length - 1,
             ),
             lastSubmittedText: null,
+            deletedPhrase: null,
         })),
 
     previousPhrase: () =>
         set((state) => ({
             currentIndex: Math.max(state.currentIndex - 1, 0),
             lastSubmittedText: null,
+            deletedPhrase: null,
         })),
 
     setScenario: (scenario: ScenarioId) =>
@@ -99,6 +115,7 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
             scenarioPhrases: computeScenarioPhrases(state.phrases, scenario),
             currentIndex: 0,
             lastSubmittedText: null,
+            deletedPhrase: null,
         })),
 
     submitResponse: async (text: string) => {
@@ -154,6 +171,70 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
             set({ generateError: (err as Error).message });
         } finally {
             set({ generating: false });
+        }
+    },
+
+    deleteCurrentPhrase: async () => {
+        const phrase = get().currentPhrase();
+        if (!phrase || phrase.source !== 'generated') return;
+
+        set({ deleting: true, deleteError: null });
+        try {
+            const deleted = await deletePhrase(phrase.id);
+            set((state) => {
+                const nextPhrases = state.phrases.filter(
+                    (p) => p.id !== deleted.id,
+                );
+                const nextScenarioPhrases = computeScenarioPhrases(
+                    nextPhrases,
+                    state.currentScenario,
+                );
+                return {
+                    phrases: nextPhrases,
+                    scenarioPhrases: nextScenarioPhrases,
+                    currentIndex: Math.min(
+                        state.currentIndex,
+                        Math.max(nextScenarioPhrases.length - 1, 0),
+                    ),
+                    deletedPhrase: deleted,
+                    lastSubmittedText: null,
+                };
+            });
+        } catch (err) {
+            set({ deleteError: (err as Error).message });
+        } finally {
+            set({ deleting: false });
+        }
+    },
+
+    undoDelete: async () => {
+        const phrase = get().deletedPhrase;
+        if (!phrase) return;
+
+        set({ undoing: true });
+        try {
+            const restored = await restorePhrase(phrase);
+            set((state) => {
+                const nextPhrases = [...state.phrases, restored];
+                const nextScenarioPhrases = computeScenarioPhrases(
+                    nextPhrases,
+                    state.currentScenario,
+                );
+                const restoredIndex = nextScenarioPhrases.findIndex(
+                    (p) => p.id === restored.id,
+                );
+                return {
+                    phrases: nextPhrases,
+                    scenarioPhrases: nextScenarioPhrases,
+                    currentIndex:
+                        restoredIndex >= 0 ? restoredIndex : state.currentIndex,
+                    deletedPhrase: null,
+                };
+            });
+        } catch (err) {
+            set({ deleteError: (err as Error).message });
+        } finally {
+            set({ undoing: false });
         }
     },
 }));

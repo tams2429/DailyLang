@@ -40,6 +40,22 @@ export function fetchPracticeHistory(
     );
 }
 
+// Deletes a previously LLM-generated phrase and returns the deleted phrase so
+// the caller can offer an "undo" action that restores it.
+export function deletePhrase(phraseId: string): Promise<Phrase> {
+    return request<Phrase>(`/api/phrases/${phraseId}`, {
+        method: 'DELETE',
+    });
+}
+
+// Undoes a deletion by re-adding the previously deleted phrase.
+export function restorePhrase(phrase: Phrase): Promise<Phrase> {
+    return request<Phrase>(`/api/phrases/${phrase.id}/restore`, {
+        method: 'POST',
+        body: JSON.stringify(phrase),
+    });
+}
+
 export interface GeneratePhrasesResult {
     scenario: string;
     label: string;

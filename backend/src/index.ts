@@ -1,4 +1,4 @@
-import { phrases } from './data/phrases';
+import { phrases, type Phrase } from './data/phrases';
 import {
     addPracticeResponse,
     getAllCachedScenarios,
@@ -21,7 +21,7 @@ function slugify(input: string): string {
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': FRONTEND_ORIGIN,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
 };
 
@@ -176,6 +176,70 @@ Bun.serve({
         );
         if (historyMatch && req.method === 'GET') {
             return json(await getPracticeResponses(historyMatch[1]));
+        }
+
+        // POST /api/phrases/:id/restore - undo a previous deletion. Body must
+        // be the full phrase object as returned by the DELETE call below.
+        const restoreMatch = url.pathname.match(
+            /^\/api\/phrases\/([\w-]+)\/restore$/,
+        );
+        if (restoreMatch && req.method === 'POST') {
+            const id = restoreMatch[1];
+            const body = (await req.json().catch(() => null)) as Phrase | null;
+
+            if (!body || body.id !== id || body.source !== 'generated') {
+                return json(
+                    { error: 'A valid generated phrase is required' },
+                    { status: 400 },
+                );
+            }
+
+            if (allPhrases.some((p) => p.id === id)) {
+                return json(
+                    { error: 'Phrase already exists' },
+                    { status: 409 },
+                );
+            }
+
+            const cached = await getCachedScenario(body.scenario);
+            const label = cached?.label ?? body.scenario;
+            const restoredPhrases = [
+                ...(cached?.phrases.filter((p) => p.id !== id) ?? []),
+                body,
+            ].sort((a, b) => a.order - b.order);
+
+            await setCachedScenario(body.scenario, label, restoredPhrases);
+            allPhrases = [...allPhrases, body];
+
+            return json(body);
+        }
+
+        // DELETE /api/phrases/:id - remove a previously LLM-generated phrase.
+        // Seed phrases (hand-written, not stored in the DB) cannot be deleted.
+        if (phraseMatch && req.method === 'DELETE') {
+            const id = phraseMatch[1];
+            const phrase = allPhrases.find((p) => p.id === id);
+            if (!phrase)
+                return json({ error: 'Phrase not found' }, { status: 404 });
+            if (phrase.source !== 'generated') {
+                return json(
+                    { error: 'Only generated phrases can be deleted' },
+                    { status: 400 },
+                );
+            }
+
+            const cached = await getCachedScenario(phrase.scenario);
+            if (cached) {
+                const remaining = cached.phrases.filter((p) => p.id !== id);
+                await setCachedScenario(
+                    phrase.scenario,
+                    cached.label,
+                    remaining,
+                );
+            }
+            allPhrases = allPhrases.filter((p) => p.id !== id);
+
+            return json(phrase);
         }
 
         // Serve preprogrammed audio files from ./public/audio

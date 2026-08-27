@@ -19,6 +19,12 @@ function App() {
         generating,
         generateError,
         generateScenario,
+        deleteCurrentPhrase,
+        deleting,
+        deleteError,
+        deletedPhrase,
+        undoDelete,
+        undoing,
     } = usePhraseStore();
     const currentPhrase = usePhraseStore((state) => state.currentPhrase());
     const allScenarios = useMemo(() => {
@@ -172,7 +178,29 @@ function App() {
 
                 {currentPhrase && (
                     <>
-                        <PhraseCard phrase={currentPhrase} />
+                        <PhraseCard
+                            phrase={currentPhrase}
+                            onDelete={deleteCurrentPhrase}
+                            deleting={deleting}
+                        />
+                        {deleteError && (
+                            <p className="text-sm text-rose-600">
+                                {deleteError}
+                            </p>
+                        )}
+                        {deletedPhrase && (
+                            <div className="flex items-center gap-3 rounded-full bg-slate-800 px-4 py-2 text-sm text-white shadow">
+                                <span>Phrase deleted.</span>
+                                <button
+                                    type="button"
+                                    onClick={undoDelete}
+                                    disabled={undoing}
+                                    className="font-medium underline underline-offset-2 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {undoing ? 'Undoing...' : 'Undo'}
+                                </button>
+                            </div>
+                        )}
                         <ResponsePractice phrase={currentPhrase} />
 
                         <div className="flex items-center gap-4">
