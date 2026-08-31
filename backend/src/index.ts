@@ -66,6 +66,112 @@ Bun.serve({
             return json(allPhrases[dayIndex]);
         }
 
+        // POST /api/phrases - manually add a phrase to a scenario. Body:
+        // { scenario, japanese, romaji, english, difficulty, label?, insertAfterId? }
+        // When insertAfterId is given, the new phrase is slotted in
+        // immediately after that phrase (shifting later phrases down),
+        // otherwise it's appended to the end of the scenario.
+        if (url.pathname === '/api/phrases' && req.method === 'POST') {
+            const body = await req.json().catch(() => null);
+
+            const scenario = slugify(
+                typeof body?.scenario === 'string' ? body.scenario : '',
+            );
+            const japanese =
+                typeof body?.japanese === 'string' ? body.japanese.trim() : '';
+            const romaji =
+                typeof body?.romaji === 'string' ? body.romaji.trim() : '';
+            const english =
+                typeof body?.english === 'string' ? body.english.trim() : '';
+            const difficulty = body?.difficulty;
+            const insertAfterId =
+                typeof body?.insertAfterId === 'string'
+                    ? body.insertAfterId
+                    : null;
+
+            if (!scenario || !japanese || !romaji || !english) {
+                return json(
+                    {
+                        error: 'scenario, japanese, romaji and english are all required',
+                    },
+                    { status: 400 },
+                );
+            }
+            if (
+                difficulty !== 'beginner' &&
+                difficulty !== 'intermediate' &&
+                difficulty !== 'advanced'
+            ) {
+                return json(
+                    {
+                        error: 'difficulty must be beginner, intermediate or advanced',
+                    },
+                    { status: 400 },
+                );
+            }
+
+            const cached = await getCachedScenario(scenario);
+            const label =
+                (typeof body?.label === 'string' && body.label.trim()) ||
+                cached?.label ||
+                scenario;
+
+            const afterPhrase = insertAfterId
+                ? allPhrases.find(
+                      (p) => p.id === insertAfterId && p.scenario === scenario,
+                  )
+                : undefined;
+
+            let insertOrder: number;
+            if (afterPhrase) {
+                // Slot in right after the phrase that initiated the add,
+                // shifting every later phrase in this scenario down by one.
+                insertOrder = afterPhrase.order + 1;
+                allPhrases = allPhrases.map((p) =>
+                    p.scenario === scenario && p.order >= insertOrder
+                        ? { ...p, order: p.order + 1 }
+                        : p,
+                );
+            } else {
+                // No anchor phrase (or it wasn't found) - append to the end.
+                insertOrder =
+                    allPhrases
+                        .filter((p) => p.scenario === scenario)
+                        .reduce((max, p) => Math.max(max, p.order), 0) + 1;
+            }
+
+            const phrase: Phrase = {
+                id: `${scenario}-custom-${Date.now()}`,
+                scenario,
+                order: insertOrder,
+                japanese,
+                romaji,
+                english,
+                audioUrl: '',
+                difficulty,
+                practicePrompt: `Respond to "${english}".`,
+                exampleResponse: '',
+                exampleResponseJapanese: '',
+                source: 'generated',
+                generatedAt: new Date().toISOString(),
+            };
+
+            allPhrases = [...allPhrases, phrase];
+
+            // Only generated/custom phrases are persisted in the DB cache;
+            // seed phrases keep their (possibly shifted) order in memory only.
+            const updatedGeneratedPhrases = allPhrases
+                .filter((p) => p.scenario === scenario && p.source === 'generated')
+                .sort((a, b) => a.order - b.order);
+            await setCachedScenario(scenario, label, updatedGeneratedPhrases);
+
+            const scenarioPhrases = allPhrases
+                .filter((p) => p.scenario === scenario)
+                .sort((a, b) => a.order - b.order);
+
+            return json({ phrase, scenarioPhrases }, { status: 201 });
+        }
+
         // GET /api/scenarios/generated - list scenarios generated via the LLM
         if (
             url.pathname === '/api/scenarios/generated' &&

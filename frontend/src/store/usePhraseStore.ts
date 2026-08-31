@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import {
+    createPhrase,
     deletePhrase,
     fetchGeneratedScenarios,
     fetchPhrases,
@@ -7,6 +8,7 @@ import {
     restorePhrase,
     submitPracticeResponse,
 } from '../api/client';
+import type { NewPhraseInput } from '../api/client';
 import { scenarios } from '../data/scenarios';
 import type { Phrase, ScenarioId, ScenarioMeta } from '../types';
 
@@ -40,6 +42,9 @@ interface PhraseStore {
     deleteError: string | null;
     undoing: boolean;
 
+    adding: boolean;
+    addError: string | null;
+
     currentPhrase: () => Phrase | null;
     loadPhrases: () => Promise<void>;
     nextPhrase: () => void;
@@ -49,6 +54,9 @@ interface PhraseStore {
     generateScenario: (input: string, force?: boolean) => Promise<void>;
     deleteCurrentPhrase: () => Promise<void>;
     undoDelete: () => Promise<void>;
+    addPhrase: (
+        input: Omit<NewPhraseInput, 'scenario' | 'label'>,
+    ) => Promise<boolean>;
 }
 
 export const usePhraseStore = create<PhraseStore>((set, get) => ({
@@ -67,6 +75,8 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
     deleting: false,
     deleteError: null,
     undoing: false,
+    adding: false,
+    addError: null,
 
     currentPhrase: () => get().scenarioPhrases[get().currentIndex] ?? null,
 
@@ -235,6 +245,51 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
             set({ deleteError: (err as Error).message });
         } finally {
             set({ undoing: false });
+        }
+    },
+
+    addPhrase: async (input) => {
+        const scenario = get().currentScenario;
+        const label =
+            get().customScenarios.find((s) => s.id === scenario)?.label ??
+            scenarios.find((s) => s.id === scenario)?.label;
+        const insertAfterId = get().currentPhrase()?.id;
+
+        set({ adding: true, addError: null });
+        try {
+            const result = await createPhrase({
+                ...input,
+                scenario,
+                label,
+                insertAfterId,
+            });
+            set((state) => {
+                const nextPhrases = [
+                    ...state.phrases.filter((p) => p.scenario !== scenario),
+                    ...result.scenarioPhrases,
+                ];
+                const nextScenarioPhrases = computeScenarioPhrases(
+                    nextPhrases,
+                    state.currentScenario,
+                );
+                const createdIndex = nextScenarioPhrases.findIndex(
+                    (p) => p.id === result.phrase.id,
+                );
+                return {
+                    phrases: nextPhrases,
+                    scenarioPhrases: nextScenarioPhrases,
+                    currentIndex:
+                        createdIndex >= 0 ? createdIndex : state.currentIndex,
+                    deletedPhrase: null,
+                    lastSubmittedText: null,
+                };
+            });
+            return true;
+        } catch (err) {
+            set({ addError: (err as Error).message });
+            return false;
+        } finally {
+            set({ adding: false });
         }
     },
 }));

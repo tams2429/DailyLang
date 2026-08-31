@@ -48,6 +48,34 @@ export function deletePhrase(phraseId: string): Promise<Phrase> {
     });
 }
 
+export interface NewPhraseInput {
+    scenario: string;
+    label?: string;
+    japanese: string;
+    romaji: string;
+    english: string;
+    difficulty: Phrase['difficulty'];
+    /** Slot the new phrase in right after this phrase id, if provided */
+    insertAfterId?: string;
+}
+
+export interface CreatePhraseResult {
+    phrase: Phrase;
+    /** Full, correctly ordered phrase list for the scenario after insertion */
+    scenarioPhrases: Phrase[];
+}
+
+// Adds a manually written phrase to a scenario, slotted in after
+// insertAfterId if provided (otherwise appended to the end).
+export function createPhrase(
+    input: NewPhraseInput,
+): Promise<CreatePhraseResult> {
+    return request<CreatePhraseResult>('/api/phrases', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    });
+}
+
 // Undoes a deletion by re-adding the previously deleted phrase.
 export function restorePhrase(phrase: Phrase): Promise<Phrase> {
     return request<Phrase>(`/api/phrases/${phrase.id}/restore`, {

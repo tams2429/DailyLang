@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePhraseStore } from './store/usePhraseStore';
 import { PhraseCard } from './components/PhraseCard';
+import { AddPhraseForm } from './components/AddPhraseForm';
 import { ResponsePractice } from './components/ResponsePractice';
 import { scenarios } from './data/scenarios';
 
 interface Toast {
     id: number;
     message: string;
-    tone: 'error' | 'warning';
+    tone: 'error' | 'warning' | 'success';
 }
 
 const toastTone: Record<Toast['tone'], string> = {
     error: 'bg-rose-600 text-white',
     warning: 'bg-amber-100 text-amber-800 ring-1 ring-amber-300',
+    success: 'bg-emerald-600 text-white',
 };
 
 function App() {
@@ -36,6 +38,9 @@ function App() {
         deletedPhrase,
         undoDelete,
         undoing,
+        addPhrase,
+        adding,
+        addError,
     } = usePhraseStore();
     const currentPhrase = usePhraseStore((state) => state.currentPhrase());
     const allScenarios = useMemo(() => {
@@ -47,6 +52,7 @@ function App() {
     const scenarioMeta = allScenarios.find((s) => s.id === currentScenario);
     const [scenarioSearch, setScenarioSearch] = useState('');
     const [isAddingScenario, setIsAddingScenario] = useState(false);
+    const [isAddingPhrase, setIsAddingPhrase] = useState(false);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const toastIdRef = useRef(0);
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -110,6 +116,15 @@ function App() {
     const handleRegenerate = () => {
         const label = scenarioMeta?.label ?? currentScenario;
         generateScenario(label, true);
+    };
+
+    const handleAddPhrase = async (
+        input: Parameters<typeof addPhrase>[0],
+    ) => {
+        const ok = await addPhrase(input);
+        if (!ok) return;
+        setIsAddingPhrase(false);
+        addToast('Phrase added', 'success');
     };
 
     return (
@@ -242,6 +257,7 @@ function App() {
                             onUndo={undoDelete}
                             undoing={undoing}
                             canUndo={Boolean(deletedPhrase)}
+                            onAdd={() => setIsAddingPhrase(true)}
                         />
                         {deleteError && (
                             <p className="text-sm text-rose-600">
@@ -287,6 +303,16 @@ function App() {
                     </>
                 )}
             </div>
+
+            {isAddingPhrase && (
+                <AddPhraseForm
+                    scenarioLabel={scenarioMeta?.label ?? currentScenario}
+                    submitting={adding}
+                    error={addError}
+                    onCancel={() => setIsAddingPhrase(false)}
+                    onSubmit={handleAddPhrase}
+                />
+            )}
         </div>
     );
 }

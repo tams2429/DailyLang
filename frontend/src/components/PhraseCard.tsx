@@ -10,6 +10,7 @@ interface PhraseCardProps {
     onUndo?: () => void;
     undoing?: boolean;
     canUndo?: boolean;
+    onAdd?: () => void;
 }
 
 const difficultyColor: Record<Phrase['difficulty'], string> = {
@@ -25,6 +26,7 @@ export function PhraseCard({
     onUndo,
     undoing,
     canUndo,
+    onAdd,
 }: PhraseCardProps) {
     const scenarioLabel =
         scenarios.find((s) => s.id === phrase.scenario)?.label ??
@@ -44,6 +46,17 @@ export function PhraseCard({
                     >
                         {phrase.difficulty}
                     </span>
+                    {onAdd && (
+                        <button
+                            type="button"
+                            onClick={onAdd}
+                            aria-label="Add a phrase to this scenario"
+                            title="Add a phrase to this scenario"
+                            className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold leading-none text-emerald-600 transition hover:bg-emerald-200"
+                        >
+                            +
+                        </button>
+                    )}
                     {showUndo && (
                         <button
                             type="button"
