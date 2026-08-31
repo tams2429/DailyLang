@@ -22,6 +22,7 @@ function App() {
         currentScenario,
         currentIndex,
         scenarioPhrases,
+        phrases,
         status,
         error,
         loadPhrases,
@@ -41,22 +42,28 @@ function App() {
         addPhrase,
         adding,
         addError,
+        createScenarioWithPhrase,
     } = usePhraseStore();
     const currentPhrase = usePhraseStore((state) => state.currentPhrase());
     const allScenarios = useMemo(() => {
         const custom = customScenarios.filter(
-            (c) => !scenarios.some((s) => s.id === c.id),
+            (c) =>
+                !scenarios.some((s) => s.id === c.id) &&
+                phrases.some((p) => p.scenario === c.id),
         );
         return [...scenarios, ...custom];
-    }, [customScenarios]);
+    }, [customScenarios, phrases]);
     const scenarioMeta = allScenarios.find((s) => s.id === currentScenario);
     const [scenarioSearch, setScenarioSearch] = useState('');
     const [isAddingScenario, setIsAddingScenario] = useState(false);
-    const [isAddingPhrase, setIsAddingPhrase] = useState(false);
+    const [addPhraseMode, setAddPhraseMode] = useState<
+        'existing' | 'new-scenario' | null
+    >(null);
+    const [newScenarioLabel, setNewScenarioLabel] = useState('');
+    const [showEmptyScenarioModal, setShowEmptyScenarioModal] = useState(false);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const toastIdRef = useRef(0);
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-    const NEW_SCENARIO_VALUE = '__new__';
 
     useEffect(() => {
         loadPhrases();
@@ -83,6 +90,10 @@ function App() {
     const handleDelete = async () => {
         await deleteCurrentPhrase();
         if (usePhraseStore.getState().deleteError) return;
+        if (usePhraseStore.getState().scenarioPhrases.length === 0) {
+            setShowEmptyScenarioModal(true);
+            return;
+        }
         addToast('Phrase deleted', 'error');
         addToast(
             'Press ↺ to keep it before moving on to the next phrase, otherwise it will be permanently deleted.',
@@ -90,12 +101,21 @@ function App() {
         );
     };
 
-    const handleScenarioSelect = (value: string) => {
-        if (value === NEW_SCENARIO_VALUE) {
-            setIsAddingScenario(true);
-            return;
-        }
-        setScenario(value);
+    const handleConfirmEmptyScenarioDelete = () => {
+        setShowEmptyScenarioModal(false);
+        addToast('Phrase deleted', 'error');
+        const currentIdx = allScenarios.findIndex(
+            (s) => s.id === currentScenario,
+        );
+        const next = allScenarios.find(
+            (s, i) => i !== currentIdx && s.id !== currentScenario,
+        );
+        if (next) setScenario(next.id);
+    };
+
+    const handleCancelEmptyScenarioDelete = async () => {
+        setShowEmptyScenarioModal(false);
+        await undoDelete();
     };
 
     const handleGenerate = async (e: React.FormEvent) => {
@@ -113,18 +133,32 @@ function App() {
         setScenarioSearch('');
     };
 
+    const handleOpenCreateScenarioPhrase = () => {
+        setNewScenarioLabel('');
+        setAddPhraseMode('new-scenario');
+    };
+
     const handleRegenerate = () => {
         const label = scenarioMeta?.label ?? currentScenario;
         generateScenario(label, true);
     };
 
-    const handleAddPhrase = async (
-        input: Parameters<typeof addPhrase>[0],
-    ) => {
+    const handleAddPhrase = async (input: Parameters<typeof addPhrase>[0]) => {
         const ok = await addPhrase(input);
         if (!ok) return;
-        setIsAddingPhrase(false);
+        setAddPhraseMode(null);
         addToast('Phrase added', 'success');
+    };
+
+    const handleCreateScenarioPhrase = async (
+        input: Parameters<typeof addPhrase>[0],
+    ) => {
+        const ok = await createScenarioWithPhrase(newScenarioLabel, input);
+        if (!ok) return;
+        setAddPhraseMode(null);
+        setIsAddingScenario(false);
+        setScenarioSearch('');
+        addToast('Scenario created', 'success');
     };
 
     return (
@@ -210,26 +244,39 @@ function App() {
                             >
                                 Scenario
                             </label>
-                            <select
-                                id="scenario-select"
-                                value={currentScenario}
-                                onChange={(e) =>
-                                    handleScenarioSelect(e.target.value)
-                                }
-                                className="w-full max-w-xs rounded-full border border-slate-300 bg-white px-4 py-2 text-center font-medium text-slate-700 focus:border-rose-400 focus:outline-none"
-                            >
-                                {allScenarios.map((scenario) => (
-                                    <option
-                                        key={scenario.id}
-                                        value={scenario.id}
-                                    >
-                                        {scenario.label}
-                                    </option>
-                                ))}
-                                <option value={NEW_SCENARIO_VALUE}>
-                                    + Add new scenario...
-                                </option>
-                            </select>
+                            <div className="flex w-full gap-2">
+                                <select
+                                    id="scenario-select"
+                                    value={currentScenario}
+                                    onChange={(e) =>
+                                        setScenario(e.target.value)
+                                    }
+                                    className="flex-1 rounded-full border border-slate-300 bg-white px-4 py-2 text-center font-medium text-slate-700 focus:border-rose-400 focus:outline-none"
+                                >
+                                    {allScenarios.map((scenario) => (
+                                        <option
+                                            key={scenario.id}
+                                            value={scenario.id}
+                                        >
+                                            {scenario.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenCreateScenarioPhrase}
+                                    className="rounded-full border border-emerald-500 px-5 py-2 font-medium text-emerald-600 transition hover:bg-emerald-50"
+                                >
+                                    Create
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddingScenario(true)}
+                                    className="rounded-full border border-slate-300 px-5 py-2 font-medium text-slate-600 transition hover:bg-white"
+                                >
+                                    Search
+                                </button>
+                            </div>
                             {scenarioMeta && (
                                 <p className="text-center text-xs text-slate-400">
                                     {scenarioMeta.description}
@@ -257,7 +304,7 @@ function App() {
                             onUndo={undoDelete}
                             undoing={undoing}
                             canUndo={Boolean(deletedPhrase)}
-                            onAdd={() => setIsAddingPhrase(true)}
+                            onAdd={() => setAddPhraseMode('existing')}
                         />
                         {deleteError && (
                             <p className="text-sm text-rose-600">
@@ -304,14 +351,58 @@ function App() {
                 )}
             </div>
 
-            {isAddingPhrase && (
+            {addPhraseMode === 'existing' && (
                 <AddPhraseForm
                     scenarioLabel={scenarioMeta?.label ?? currentScenario}
                     submitting={adding}
                     error={addError}
-                    onCancel={() => setIsAddingPhrase(false)}
+                    onCancel={() => setAddPhraseMode(null)}
                     onSubmit={handleAddPhrase}
                 />
+            )}
+
+            {addPhraseMode === 'new-scenario' && (
+                <AddPhraseForm
+                    scenarioLabel={newScenarioLabel}
+                    scenarioEditable
+                    onScenarioLabelChange={setNewScenarioLabel}
+                    submitting={adding}
+                    error={addError}
+                    onCancel={() => setAddPhraseMode(null)}
+                    onSubmit={handleCreateScenarioPhrase}
+                />
+            )}
+
+            {showEmptyScenarioModal && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4">
+                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Delete this scenario?
+                        </h2>
+                        <p className="mt-2 text-sm text-slate-600">
+                            This was the last phrase in{' '}
+                            {scenarioMeta?.label ?? currentScenario}. Deleting
+                            it will leave the scenario empty. Are you sure?
+                        </p>
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={handleCancelEmptyScenarioDelete}
+                                disabled={undoing}
+                                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                No, keep it
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmEmptyScenarioDelete}
+                                className="rounded-full bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-500"
+                            >
+                                Yes, delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

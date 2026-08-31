@@ -108,6 +108,23 @@ export async function setCachedScenario(
     });
 }
 
+export async function deleteCachedScenario(slug: string): Promise<void> {
+    try {
+        await sql`delete from scenarios where slug = ${slug}`;
+    } catch (err) {
+        console.error(
+            'DB delete failed, scenario will only be removed locally:',
+            err,
+        );
+    }
+
+    const fallback = await loadFallback();
+    if (slug in fallback) {
+        const { [slug]: _removed, ...rest } = fallback;
+        await writeFallback(rest);
+    }
+}
+
 export async function getAllCachedScenarios(): Promise<Cache> {
     try {
         const rows = await sql`

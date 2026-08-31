@@ -4,6 +4,9 @@ import type { Phrase } from '../types';
 interface AddPhraseFormProps {
     /** Label of the scenario the new phrase will be added to */
     scenarioLabel: string;
+    /** When true, the Scenario field is an editable input instead of read-only */
+    scenarioEditable?: boolean;
+    onScenarioLabelChange?: (value: string) => void;
     submitting?: boolean;
     error?: string | null;
     onCancel: () => void;
@@ -26,6 +29,8 @@ const fieldClass =
 
 export function AddPhraseForm({
     scenarioLabel,
+    scenarioEditable,
+    onScenarioLabelChange,
     submitting,
     error,
     onCancel,
@@ -38,7 +43,11 @@ export function AddPhraseForm({
         useState<Phrase['difficulty']>('beginner');
 
     const canSubmit =
-        japanese.trim() && romaji.trim() && english.trim() && !submitting;
+        japanese.trim() &&
+        romaji.trim() &&
+        english.trim() &&
+        (!scenarioEditable || scenarioLabel.trim()) &&
+        !submitting;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,8 +82,17 @@ export function AddPhraseForm({
                             id="new-phrase-scenario"
                             type="text"
                             value={scenarioLabel}
-                            readOnly
-                            className={`${fieldClass} cursor-not-allowed bg-slate-100 text-slate-500`}
+                            readOnly={!scenarioEditable}
+                            autoFocus={scenarioEditable}
+                            onChange={(e) =>
+                                onScenarioLabelChange?.(e.target.value)
+                            }
+                            placeholder="e.g. Job interview"
+                            className={
+                                scenarioEditable
+                                    ? fieldClass
+                                    : `${fieldClass} cursor-not-allowed bg-slate-100 text-slate-500`
+                            }
                         />
                     </div>
 
@@ -88,7 +106,7 @@ export function AddPhraseForm({
                         <input
                             id="new-phrase-japanese"
                             type="text"
-                            autoFocus
+                            autoFocus={!scenarioEditable}
                             required
                             value={japanese}
                             onChange={(e) => setJapanese(e.target.value)}

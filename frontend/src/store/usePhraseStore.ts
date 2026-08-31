@@ -57,6 +57,10 @@ interface PhraseStore {
     addPhrase: (
         input: Omit<NewPhraseInput, 'scenario' | 'label'>,
     ) => Promise<boolean>;
+    createScenarioWithPhrase: (
+        scenarioLabel: string,
+        input: Omit<NewPhraseInput, 'scenario' | 'label' | 'insertAfterId'>,
+    ) => Promise<boolean>;
 }
 
 export const usePhraseStore = create<PhraseStore>((set, get) => ({
@@ -280,6 +284,58 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
                     scenarioPhrases: nextScenarioPhrases,
                     currentIndex:
                         createdIndex >= 0 ? createdIndex : state.currentIndex,
+                    deletedPhrase: null,
+                    lastSubmittedText: null,
+                };
+            });
+            return true;
+        } catch (err) {
+            set({ addError: (err as Error).message });
+            return false;
+        } finally {
+            set({ adding: false });
+        }
+    },
+
+    createScenarioWithPhrase: async (scenarioLabel, input) => {
+        const label = scenarioLabel.trim();
+        if (!label) return false;
+
+        set({ adding: true, addError: null });
+        try {
+            const result = await createPhrase({
+                ...input,
+                scenario: label,
+                label,
+            });
+            const scenarioId = result.phrase.scenario;
+            set((state) => {
+                const nextPhrases = [
+                    ...state.phrases.filter((p) => p.scenario !== scenarioId),
+                    ...result.scenarioPhrases,
+                ];
+                const hasCustom = state.customScenarios.some(
+                    (s) => s.id === scenarioId,
+                );
+                const customScenarios = hasCustom
+                    ? state.customScenarios
+                    : [
+                          ...state.customScenarios,
+                          {
+                              id: scenarioId,
+                              label,
+                              description: 'Custom generated scenario',
+                          },
+                      ];
+                return {
+                    phrases: nextPhrases,
+                    customScenarios,
+                    currentScenario: scenarioId,
+                    scenarioPhrases: computeScenarioPhrases(
+                        nextPhrases,
+                        scenarioId,
+                    ),
+                    currentIndex: 0,
                     deletedPhrase: null,
                     lastSubmittedText: null,
                 };

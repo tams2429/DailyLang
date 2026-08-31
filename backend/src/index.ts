@@ -1,6 +1,7 @@
 import { phrases, type Phrase } from './data/phrases';
 import {
     addPracticeResponse,
+    deleteCachedScenario,
     getAllCachedScenarios,
     getCachedScenario,
     getPracticeResponses,
@@ -161,7 +162,9 @@ Bun.serve({
             // Only generated/custom phrases are persisted in the DB cache;
             // seed phrases keep their (possibly shifted) order in memory only.
             const updatedGeneratedPhrases = allPhrases
-                .filter((p) => p.scenario === scenario && p.source === 'generated')
+                .filter(
+                    (p) => p.scenario === scenario && p.source === 'generated',
+                )
                 .sort((a, b) => a.order - b.order);
             await setCachedScenario(scenario, label, updatedGeneratedPhrases);
 
@@ -337,11 +340,15 @@ Bun.serve({
             const cached = await getCachedScenario(phrase.scenario);
             if (cached) {
                 const remaining = cached.phrases.filter((p) => p.id !== id);
-                await setCachedScenario(
-                    phrase.scenario,
-                    cached.label,
-                    remaining,
-                );
+                if (remaining.length === 0) {
+                    await deleteCachedScenario(phrase.scenario);
+                } else {
+                    await setCachedScenario(
+                        phrase.scenario,
+                        cached.label,
+                        remaining,
+                    );
+                }
             }
             allPhrases = allPhrases.filter((p) => p.id !== id);
 
