@@ -117,3 +117,12 @@ export interface GeneratedScenarioMeta {
 export function fetchGeneratedScenarios(): Promise<GeneratedScenarioMeta[]> {
     return request<GeneratedScenarioMeta[]>('/api/scenarios/generated');
 }
+
+// Deletes an entire user-generated scenario and all of its phrases.
+export function deleteScenario(
+    scenarioId: string,
+): Promise<{ scenario: string }> {
+    return request<{ scenario: string }>(`/api/scenarios/${scenarioId}`, {
+        method: 'DELETE',
+    });
+}

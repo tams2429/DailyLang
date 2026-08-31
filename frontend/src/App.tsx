@@ -43,6 +43,8 @@ function App() {
         adding,
         addError,
         createScenarioWithPhrase,
+        deleteEntireScenario,
+        deletingScenario,
     } = usePhraseStore();
     const currentPhrase = usePhraseStore((state) => state.currentPhrase());
     const allScenarios = useMemo(() => {
@@ -61,6 +63,8 @@ function App() {
     >(null);
     const [newScenarioLabel, setNewScenarioLabel] = useState('');
     const [showEmptyScenarioModal, setShowEmptyScenarioModal] = useState(false);
+    const [showDeleteScenarioModal, setShowDeleteScenarioModal] =
+        useState(false);
     const [toasts, setToasts] = useState<Toast[]>([]);
     const toastIdRef = useRef(0);
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -116,6 +120,25 @@ function App() {
     const handleCancelEmptyScenarioDelete = async () => {
         setShowEmptyScenarioModal(false);
         await undoDelete();
+    };
+
+    const isCustomScenario = customScenarios.some(
+        (s) => s.id === currentScenario,
+    );
+
+    const handleConfirmDeleteScenario = async () => {
+        const scenarioToDelete = currentScenario;
+        const ok = await deleteEntireScenario(scenarioToDelete);
+        setShowDeleteScenarioModal(false);
+        if (!ok) return;
+        addToast('Scenario deleted', 'error');
+        const currentIdx = allScenarios.findIndex(
+            (s) => s.id === scenarioToDelete,
+        );
+        const next = allScenarios.find(
+            (s, i) => i !== currentIdx && s.id !== scenarioToDelete,
+        );
+        if (next) setScenario(next.id);
     };
 
     const handleGenerate = async (e: React.FormEvent) => {
@@ -269,6 +292,17 @@ function App() {
                                 >
                                     Create
                                 </button>
+                                {isCustomScenario && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowDeleteScenarioModal(true)
+                                        }
+                                        className="rounded-full border border-rose-500 px-5 py-2 font-medium text-rose-600 transition hover:bg-rose-50"
+                                    >
+                                        Delete
+                                    </button>
+                                )}
                                 <button
                                     type="button"
                                     onClick={() => setIsAddingScenario(true)}
@@ -399,6 +433,45 @@ function App() {
                                 className="rounded-full bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-500"
                             >
                                 Yes, delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showDeleteScenarioModal && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/40 px-4">
+                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Delete this scenario?
+                        </h2>
+                        <p className="mt-2 text-sm text-slate-600">
+                            This will permanently delete{' '}
+                            {scenarioMeta?.label ?? currentScenario} and all{' '}
+                            {scenarioPhrases.length} phrase
+                            {scenarioPhrases.length === 1 ? '' : 's'} in it. Are
+                            you sure?
+                        </p>
+                        <div className="mt-5 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setShowDeleteScenarioModal(false)
+                                }
+                                disabled={deletingScenario}
+                                className="rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                No, keep it
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmDeleteScenario}
+                                disabled={deletingScenario}
+                                className="rounded-full bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {deletingScenario
+                                    ? 'Deleting...'
+                                    : 'Yes, delete'}
                             </button>
                         </div>
                     </div>

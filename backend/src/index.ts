@@ -355,6 +355,25 @@ Bun.serve({
             return json(phrase);
         }
 
+        // DELETE /api/scenarios/:slug - remove an entire user-generated
+        // scenario and all of its phrases. Scenarios that aren't stored in
+        // the DB (i.e. hand-written seed scenarios) cannot be deleted.
+        const scenarioMatch = url.pathname.match(
+            /^\/api\/scenarios\/([\w-]+)$/,
+        );
+        if (scenarioMatch && req.method === 'DELETE') {
+            const slug = scenarioMatch[1];
+            const cached = await getCachedScenario(slug);
+            if (!cached) {
+                return json({ error: 'Scenario not found' }, { status: 404 });
+            }
+
+            await deleteCachedScenario(slug);
+            allPhrases = allPhrases.filter((p) => p.scenario !== slug);
+
+            return json({ scenario: slug });
+        }
+
         // Serve preprogrammed audio files from ./public/audio
         if (url.pathname.startsWith('/audio/')) {
             const file = Bun.file(

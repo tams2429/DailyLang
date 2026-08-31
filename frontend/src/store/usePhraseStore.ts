@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import {
     createPhrase,
     deletePhrase,
+    deleteScenario,
     fetchGeneratedScenarios,
     fetchPhrases,
     generatePhrases,
@@ -45,6 +46,9 @@ interface PhraseStore {
     adding: boolean;
     addError: string | null;
 
+    deletingScenario: boolean;
+    deleteScenarioError: string | null;
+
     currentPhrase: () => Phrase | null;
     loadPhrases: () => Promise<void>;
     nextPhrase: () => void;
@@ -61,6 +65,7 @@ interface PhraseStore {
         scenarioLabel: string,
         input: Omit<NewPhraseInput, 'scenario' | 'label' | 'insertAfterId'>,
     ) => Promise<boolean>;
+    deleteEntireScenario: (scenarioId: string) => Promise<boolean>;
 }
 
 export const usePhraseStore = create<PhraseStore>((set, get) => ({
@@ -81,6 +86,8 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
     undoing: false,
     adding: false,
     addError: null,
+    deletingScenario: false,
+    deleteScenarioError: null,
 
     currentPhrase: () => get().scenarioPhrases[get().currentIndex] ?? null,
 
@@ -346,6 +353,32 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
             return false;
         } finally {
             set({ adding: false });
+        }
+    },
+
+    deleteEntireScenario: async (scenarioId) => {
+        set({ deletingScenario: true, deleteScenarioError: null });
+        try {
+            await deleteScenario(scenarioId);
+            set((state) => {
+                const nextPhrases = state.phrases.filter(
+                    (p) => p.scenario !== scenarioId,
+                );
+                const customScenarios = state.customScenarios.filter(
+                    (s) => s.id !== scenarioId,
+                );
+                return {
+                    phrases: nextPhrases,
+                    customScenarios,
+                    deletedPhrase: null,
+                };
+            });
+            return true;
+        } catch (err) {
+            set({ deleteScenarioError: (err as Error).message });
+            return false;
+        } finally {
+            set({ deletingScenario: false });
         }
     },
 }));
