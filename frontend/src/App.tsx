@@ -1,8 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePhraseStore } from './store/usePhraseStore';
 import { PhraseCard } from './components/PhraseCard';
 import { ResponsePractice } from './components/ResponsePractice';
 import { scenarios } from './data/scenarios';
+
+interface Toast {
+    id: number;
+    message: string;
+    tone: 'error' | 'warning';
+}
+
+const toastTone: Record<Toast['tone'], string> = {
+    error: 'bg-rose-600 text-white',
+    warning: 'bg-amber-100 text-amber-800 ring-1 ring-amber-300',
+};
 
 function App() {
     const {
@@ -36,11 +47,42 @@ function App() {
     const scenarioMeta = allScenarios.find((s) => s.id === currentScenario);
     const [scenarioSearch, setScenarioSearch] = useState('');
     const [isAddingScenario, setIsAddingScenario] = useState(false);
+    const [toasts, setToasts] = useState<Toast[]>([]);
+    const toastIdRef = useRef(0);
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
     const NEW_SCENARIO_VALUE = '__new__';
 
     useEffect(() => {
         loadPhrases();
     }, [loadPhrases]);
+
+    // Clear any pending toast timers on unmount.
+    useEffect(() => {
+        const timers = timersRef.current;
+        return () => timers.forEach(clearTimeout);
+    }, []);
+
+    // Each call pushes a new toast with its own id, so pressing a button
+    // repeatedly re-shows the message every time rather than only once.
+    const addToast = useCallback((message: string, tone: Toast['tone']) => {
+        const id = ++toastIdRef.current;
+        setToasts((prev) => [...prev, { id, message, tone }]);
+        const timer = setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== id));
+            timersRef.current = timersRef.current.filter((t) => t !== timer);
+        }, 3000);
+        timersRef.current.push(timer);
+    }, []);
+
+    const handleDelete = async () => {
+        await deleteCurrentPhrase();
+        if (usePhraseStore.getState().deleteError) return;
+        addToast('Phrase deleted', 'error');
+        addToast(
+            'Press ↺ to keep it before moving on to the next phrase, otherwise it will be permanently deleted.',
+            'warning',
+        );
+    };
 
     const handleScenarioSelect = (value: string) => {
         if (value === NEW_SCENARIO_VALUE) {
@@ -72,6 +114,21 @@ function App() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-10">
+            <div
+                aria-live="polite"
+                className="pointer-events-none fixed inset-x-0 top-4 z-50 flex flex-col items-center gap-2 px-4"
+            >
+                {toasts.map((toast) => (
+                    <div
+                        key={toast.id}
+                        role="status"
+                        className={`max-w-md rounded-full px-4 py-2 text-center text-sm font-medium shadow-lg ${toastTone[toast.tone]}`}
+                    >
+                        {toast.message}
+                    </div>
+                ))}
+            </div>
+
             <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
                 <header className="text-center">
                     <h1 className="text-3xl font-bold text-slate-900">
@@ -180,26 +237,16 @@ function App() {
                     <>
                         <PhraseCard
                             phrase={currentPhrase}
-                            onDelete={deleteCurrentPhrase}
+                            onDelete={handleDelete}
                             deleting={deleting}
+                            onUndo={undoDelete}
+                            undoing={undoing}
+                            canUndo={Boolean(deletedPhrase)}
                         />
                         {deleteError && (
                             <p className="text-sm text-rose-600">
                                 {deleteError}
                             </p>
-                        )}
-                        {deletedPhrase && (
-                            <div className="flex items-center gap-3 rounded-full bg-slate-800 px-4 py-2 text-sm text-white shadow">
-                                <span>Phrase deleted.</span>
-                                <button
-                                    type="button"
-                                    onClick={undoDelete}
-                                    disabled={undoing}
-                                    className="font-medium underline underline-offset-2 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    {undoing ? 'Undoing...' : 'Undo'}
-                                </button>
-                            </div>
                         )}
                         <ResponsePractice phrase={currentPhrase} />
 
