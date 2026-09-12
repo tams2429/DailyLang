@@ -210,9 +210,18 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
                     nextPhrases,
                     state.currentScenario,
                 );
+                // The backend auto-deletes the scenario itself once its last
+                // phrase is gone, so mirror that here too.
+                const customScenarios =
+                    nextScenarioPhrases.length === 0
+                        ? state.customScenarios.filter(
+                              (s) => s.id !== state.currentScenario,
+                          )
+                        : state.customScenarios;
                 return {
                     phrases: nextPhrases,
                     scenarioPhrases: nextScenarioPhrases,
+                    customScenarios,
                     currentIndex: Math.min(
                         state.currentIndex,
                         Math.max(nextScenarioPhrases.length - 1, 0),
@@ -244,9 +253,25 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
                 const restoredIndex = nextScenarioPhrases.findIndex(
                     (p) => p.id === restored.id,
                 );
+                // Undoing a last-phrase delete recreates the scenario on the
+                // backend, so bring it back into the local list too.
+                const hasCustom = state.customScenarios.some(
+                    (s) => s.id === restored.scenario,
+                );
+                const customScenarios = hasCustom
+                    ? state.customScenarios
+                    : [
+                          ...state.customScenarios,
+                          {
+                              id: restored.scenario,
+                              label: restored.scenario,
+                              description: 'Custom generated scenario',
+                          },
+                      ];
                 return {
                     phrases: nextPhrases,
                     scenarioPhrases: nextScenarioPhrases,
+                    customScenarios,
                     currentIndex:
                         restoredIndex >= 0 ? restoredIndex : state.currentIndex,
                     deletedPhrase: null,

@@ -108,10 +108,7 @@ Bun.serve({
                 });
                 return json(result);
             } catch (err) {
-                return json(
-                    { error: (err as Error).message },
-                    { status: 502 },
-                );
+                return json({ error: (err as Error).message }, { status: 502 });
             }
         }
 
@@ -280,6 +277,16 @@ Bun.serve({
 
             try {
                 const generated = await generatePhrasesForScenario(slug, label);
+                // Don't persist empty results - it would leave a permanent,
+                // undeletable-looking scenario entry with 0 phrases.
+                if (generated.length === 0) {
+                    return json(
+                        {
+                            error: 'No phrases were generated for this scenario',
+                        },
+                        { status: 502 },
+                    );
+                }
                 await setCachedScenario(slug, label, generated);
                 allPhrases = [
                     ...allPhrases.filter((p) => p.scenario !== slug),
@@ -396,13 +403,20 @@ Bun.serve({
             const cached = await getCachedScenario(phrase.scenario);
             if (cached) {
                 const remaining = cached.phrases.filter((p) => p.id !== id);
-                if (remaining.length === 0) {
-                    await deleteCachedScenario(phrase.scenario);
-                } else {
-                    await setCachedScenario(
-                        phrase.scenario,
-                        cached.label,
-                        remaining,
+                try {
+                    if (remaining.length === 0) {
+                        await deleteCachedScenario(phrase.scenario);
+                    } else {
+                        await setCachedScenario(
+                            phrase.scenario,
+                            cached.label,
+                            remaining,
+                        );
+                    }
+                } catch (err) {
+                    return json(
+                        { error: (err as Error).message },
+                        { status: 502 },
                     );
                 }
             }
@@ -424,7 +438,11 @@ Bun.serve({
                 return json({ error: 'Scenario not found' }, { status: 404 });
             }
 
-            await deleteCachedScenario(slug);
+            try {
+                await deleteCachedScenario(slug);
+            } catch (err) {
+                return json({ error: (err as Error).message }, { status: 502 });
+            }
             allPhrases = allPhrases.filter((p) => p.scenario !== slug);
 
             return json({ scenario: slug });

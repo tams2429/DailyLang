@@ -108,15 +108,11 @@ export async function setCachedScenario(
     });
 }
 
+// Unlike setCachedScenario, DB failures here are NOT swallowed: silently
+// "deleting" only from the local fallback would make the scenario reappear
+// on the next DB read, so callers must see the error and can report failure.
 export async function deleteCachedScenario(slug: string): Promise<void> {
-    try {
-        await sql`delete from scenarios where slug = ${slug}`;
-    } catch (err) {
-        console.error(
-            'DB delete failed, scenario will only be removed locally:',
-            err,
-        );
-    }
+    await sql`delete from scenarios where slug = ${slug}`;
 
     const fallback = await loadFallback();
     if (slug in fallback) {

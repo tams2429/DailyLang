@@ -80,11 +80,6 @@
         ],
         "updatedAt": "2026-08-27T15:47:08.388Z"
     },
-    "airport": {
-        "label": "Airport",
-        "phrases": [],
-        "updatedAt": "2026-08-31T16:02:56.375Z"
-    },
     "library": {
         "label": "Library",
         "phrases": [
@@ -186,18 +181,18 @@
         "phrases": [
             {
                 "id": "job-interview-1",
-                "scenario": "job-interview",
                 "order": 1,
-                "japanese": "本日はお時間をいただき、ありがとうございます。",
                 "romaji": "Honjitsu wa ojikan wo itadaki, arigatou gozaimasu.",
+                "source": "generated",
                 "english": "Thank you for taking the time to meet with me today.",
                 "audioUrl": "",
+                "japanese": "本日はお時間をいただき、ありがとうございます。",
+                "scenario": "job-interview",
                 "difficulty": "beginner",
+                "generatedAt": "2026-09-01T23:28:46.629Z",
                 "practicePrompt": "Respond by saying 'You're welcome. Please take a seat.'",
                 "exampleResponse": "Kochira koso. Douzo osuwari kudasai.",
-                "exampleResponseJapanese": "こちらこそ。どうぞお座りください。",
-                "source": "generated",
-                "generatedAt": "2026-09-01T23:28:46.629Z"
+                "exampleResponseJapanese": "こちらこそ。どうぞお座りください。"
             },
             {
                 "id": "job-interview-2",
@@ -275,6 +270,6 @@
                 "exampleResponseJapanese": "ありがとうございます。連絡をお待ちしております。"
             }
         ],
-        "updatedAt": "2026-09-01T23:29:44.378Z"
+        "updatedAt": "2026-09-12T20:22:13.831Z"
     }
 }

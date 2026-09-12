@@ -48,13 +48,14 @@ function App() {
     } = usePhraseStore();
     const currentPhrase = usePhraseStore((state) => state.currentPhrase());
     const allScenarios = useMemo(() => {
+        // Include custom scenarios even with 0 phrases so an empty one
+        // (e.g. after deleting its last phrase) can still be selected and
+        // removed via the Delete button instead of becoming unreachable.
         const custom = customScenarios.filter(
-            (c) =>
-                !scenarios.some((s) => s.id === c.id) &&
-                phrases.some((p) => p.scenario === c.id),
+            (c) => !scenarios.some((s) => s.id === c.id),
         );
         return [...scenarios, ...custom];
-    }, [customScenarios, phrases]);
+    }, [customScenarios]);
     const scenarioMeta = allScenarios.find((s) => s.id === currentScenario);
     const [scenarioSearch, setScenarioSearch] = useState('');
     const [isAddingScenario, setIsAddingScenario] = useState(false);
