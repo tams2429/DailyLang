@@ -1,100 +1,4 @@
 {
-    "library": {
-        "label": "Library",
-        "phrases": [
-            {
-                "id": "library-1",
-                "order": 1,
-                "romaji": "Sumimasen, toshokan no kaado wo tsukuritai n desu ga.",
-                "source": "generated",
-                "english": "Excuse me, I would like to make a library card.",
-                "audioUrl": "",
-                "japanese": "すみません、図書館のカードを作りたいのですが。",
-                "scenario": "library",
-                "difficulty": "beginner",
-                "generatedAt": "2026-08-16T17:21:12.947Z",
-                "practicePrompt": "Ask the visitor to show their ID.",
-                "exampleResponse": "Mibun shoumeisho wo misete itadakemasu ka?",
-                "exampleResponseJapanese": "身分証明書を見せていただけますか。"
-            },
-            {
-                "id": "library-2",
-                "order": 2,
-                "romaji": "Kono hon wa doko ni arimasu ka?",
-                "source": "generated",
-                "english": "Where is this book located?",
-                "audioUrl": "",
-                "japanese": "この本はどこにありますか。",
-                "scenario": "library",
-                "difficulty": "beginner",
-                "generatedAt": "2026-08-16T17:21:12.947Z",
-                "practicePrompt": "Tell them the book is in the history section on the second floor.",
-                "exampleResponse": "Ni-kai no rekishi koonaa ni arimasu.",
-                "exampleResponseJapanese": "2階の歴史コーナーにあります。"
-            },
-            {
-                "id": "library-3",
-                "order": 3,
-                "romaji": "Kono jishuushitsu no seki wa yoyaku ga hitsuyou desu ka?",
-                "source": "generated",
-                "english": "Do I need a reservation for these study room seats?",
-                "audioUrl": "",
-                "japanese": "この自習室の席は予約が必要ですか。",
-                "scenario": "library",
-                "difficulty": "advanced",
-                "generatedAt": "2026-08-16T17:21:12.947Z",
-                "practicePrompt": "Explain that weekends require a reservation, but weekdays are first-come, first-served.",
-                "exampleResponse": "Shuumatsu wa yoyaku ga hitsuyou desu ga, heijitsu wa senchakujun desu.",
-                "exampleResponseJapanese": "週末は予約が必要ですが、平日は先着順です。"
-            },
-            {
-                "id": "library-4",
-                "order": 4,
-                "romaji": "Kono hon wo karitai n desu ga.",
-                "source": "generated",
-                "english": "I would like to borrow these books.",
-                "audioUrl": "",
-                "japanese": "この本を借りたいのですが。",
-                "scenario": "library",
-                "difficulty": "intermediate",
-                "generatedAt": "2026-08-16T17:21:12.947Z",
-                "practicePrompt": "Ask them to present their library card.",
-                "exampleResponse": "Toshokan kaado wo dashite kudasai.",
-                "exampleResponseJapanese": "図書館カードを出してください。"
-            },
-            {
-                "id": "library-5",
-                "order": 5,
-                "romaji": "Kashidashi kikan wa ni-shuukan desu ga, enchou wa kanou desu ka?",
-                "source": "generated",
-                "english": "The lending period is two weeks, but is an extension possible?",
-                "audioUrl": "",
-                "japanese": "貸出期間は2週間ですが、延長は可能ですか。",
-                "scenario": "library",
-                "difficulty": "intermediate",
-                "generatedAt": "2026-08-16T17:21:12.947Z",
-                "practicePrompt": "Reply that they can extend it once online if there are no reservations.",
-                "exampleResponse": "Yoyaku ga nakereba, onrain de ichido enchou dekimasu.",
-                "exampleResponseJapanese": "予約がなければ、オンラインで一度延長できます。"
-            },
-            {
-                "id": "library-6",
-                "order": 6,
-                "romaji": "Kyuukanbi ni hon wo henkyaku shitai baai wa, dou sureba ii desu ka?",
-                "source": "generated",
-                "english": "What should I do if I want to return books on days the library is closed?",
-                "audioUrl": "",
-                "japanese": "休館日に本を返却したい場合は、どうすればいいですか。",
-                "scenario": "library",
-                "difficulty": "advanced",
-                "generatedAt": "2026-08-16T17:21:12.947Z",
-                "practicePrompt": "Instruct them to place the books into the return slot outside the entrance.",
-                "exampleResponse": "Iriguchi no soto ni aru henkyakubokkusu ni irete kudasai.",
-                "exampleResponseJapanese": "入口の外にある返却ボックスに入れてください。"
-            }
-        ],
-        "updatedAt": "2026-08-16T17:21:12.947Z"
-    },
     "buying-a-pillow": {
         "label": "Buying a pillow",
         "phrases": [
@@ -127,21 +31,6 @@
                 "practicePrompt": "As the clerk, say that you have memory foam (low-rebound) pillows over here.",
                 "exampleResponse": "Kochira ni teihanshou makura ga gozaimasu.",
                 "exampleResponseJapanese": "こちらに低反発枕がございます。"
-            },
-            {
-                "id": "buying-a-pillow-3",
-                "order": 3,
-                "romaji": "Kochira de jissai ni beddo ni yokoninatte otameshi itadakemasu yo.",
-                "source": "generated",
-                "english": "You can actually lie down on the bed here to try it out.",
-                "audioUrl": "",
-                "japanese": "こちらで実際にベッドに横になってお試しいただけますよ。",
-                "scenario": "buying-a-pillow",
-                "difficulty": "intermediate",
-                "generatedAt": "2026-08-16T17:25:08.337Z",
-                "practicePrompt": "Say 'Thank you, then I will try lying down for a moment.'",
-                "exampleResponse": "Arigatou gozaimasu. Ja, chotto yokoninatte mimasu.",
-                "exampleResponseJapanese": "ありがとうございます。じゃあ、ちょっと横になってみます。"
             },
             {
                 "id": "buying-a-pillow-4",
@@ -189,6 +78,203 @@
                 "exampleResponseJapanese": "はい、洗えるものを見せてください。"
             }
         ],
-        "updatedAt": "2026-08-16T17:25:08.337Z"
+        "updatedAt": "2026-08-27T15:47:08.388Z"
+    },
+    "airport": {
+        "label": "Airport",
+        "phrases": [],
+        "updatedAt": "2026-08-31T16:02:56.375Z"
+    },
+    "library": {
+        "label": "Library",
+        "phrases": [
+            {
+                "id": "library-1",
+                "order": 1,
+                "romaji": "Sumimasen, toshokan no kaado wo tsukuritai n desu ga.",
+                "source": "generated",
+                "english": "Excuse me, I would like to make a library card.",
+                "audioUrl": "",
+                "japanese": "すみません、図書館のカードを作りたいのですが。",
+                "scenario": "library",
+                "difficulty": "beginner",
+                "generatedAt": "2026-08-16T17:21:12.947Z",
+                "practicePrompt": "Ask the visitor to show their ID.",
+                "exampleResponse": "Mibun shoumeisho wo misete itadakemasu ka?",
+                "exampleResponseJapanese": "身分証明書を見せていただけますか。"
+            },
+            {
+                "id": "library-2",
+                "order": 2,
+                "romaji": "Kono hon wa doko ni arimasu ka?",
+                "source": "generated",
+                "english": "Where is this book located?",
+                "audioUrl": "",
+                "japanese": "この本はどこにありますか。",
+                "scenario": "library",
+                "difficulty": "beginner",
+                "generatedAt": "2026-08-16T17:21:12.947Z",
+                "practicePrompt": "Tell them the book is in the history section on the second floor.",
+                "exampleResponse": "Ni-kai no rekishi koonaa ni arimasu.",
+                "exampleResponseJapanese": "2階の歴史コーナーにあります。"
+            },
+            {
+                "id": "library-3",
+                "order": 4,
+                "romaji": "Kono jishuushitsu no seki wa yoyaku ga hitsuyou desu ka?",
+                "source": "generated",
+                "english": "Do I need a reservation for these study room seats?",
+                "audioUrl": "",
+                "japanese": "この自習室の席は予約が必要ですか。",
+                "scenario": "library",
+                "difficulty": "advanced",
+                "generatedAt": "2026-08-16T17:21:12.947Z",
+                "practicePrompt": "Explain that weekends require a reservation, but weekdays are first-come, first-served.",
+                "exampleResponse": "Shuumatsu wa yoyaku ga hitsuyou desu ga, heijitsu wa senchakujun desu.",
+                "exampleResponseJapanese": "週末は予約が必要ですが、平日は先着順です。"
+            },
+            {
+                "id": "library-4",
+                "order": 5,
+                "romaji": "Kono hon wo karitai n desu ga.",
+                "source": "generated",
+                "english": "I would like to borrow these books.",
+                "audioUrl": "",
+                "japanese": "この本を借りたいのですが。",
+                "scenario": "library",
+                "difficulty": "intermediate",
+                "generatedAt": "2026-08-16T17:21:12.947Z",
+                "practicePrompt": "Ask them to present their library card.",
+                "exampleResponse": "Toshokan kaado wo dashite kudasai.",
+                "exampleResponseJapanese": "図書館カードを出してください。"
+            },
+            {
+                "id": "library-5",
+                "order": 6,
+                "romaji": "Kashidashi kikan wa ni-shuukan desu ga, enchou wa kanou desu ka?",
+                "source": "generated",
+                "english": "The lending period is two weeks, but is an extension possible?",
+                "audioUrl": "",
+                "japanese": "貸出期間は2週間ですが、延長は可能ですか。",
+                "scenario": "library",
+                "difficulty": "intermediate",
+                "generatedAt": "2026-08-16T17:21:12.947Z",
+                "practicePrompt": "Reply that they can extend it once online if there are no reservations.",
+                "exampleResponse": "Yoyaku ga nakereba, onrain de ichido enchou dekimasu.",
+                "exampleResponseJapanese": "予約がなければ、オンラインで一度延長できます。"
+            },
+            {
+                "id": "library-6",
+                "order": 7,
+                "romaji": "Kyuukanbi ni hon wo henkyaku shitai baai wa, dou sureba ii desu ka?",
+                "source": "generated",
+                "english": "What should I do if I want to return books on days the library is closed?",
+                "audioUrl": "",
+                "japanese": "休館日に本を返却したい場合は、どうすればいいですか。",
+                "scenario": "library",
+                "difficulty": "advanced",
+                "generatedAt": "2026-08-16T17:21:12.947Z",
+                "practicePrompt": "Instruct them to place the books into the return slot outside the entrance.",
+                "exampleResponse": "Iriguchi no soto ni aru henkyakubokkusu ni irete kudasai.",
+                "exampleResponseJapanese": "入口の外にある返却ボックスに入れてください。"
+            }
+        ],
+        "updatedAt": "2026-08-31T16:06:11.774Z"
+    },
+    "job-interview": {
+        "label": "Job interview",
+        "phrases": [
+            {
+                "id": "job-interview-1",
+                "scenario": "job-interview",
+                "order": 1,
+                "japanese": "本日はお時間をいただき、ありがとうございます。",
+                "romaji": "Honjitsu wa ojikan wo itadaki, arigatou gozaimasu.",
+                "english": "Thank you for taking the time to meet with me today.",
+                "audioUrl": "",
+                "difficulty": "beginner",
+                "practicePrompt": "Respond by saying 'You're welcome. Please take a seat.'",
+                "exampleResponse": "Kochira koso. Douzo osuwari kudasai.",
+                "exampleResponseJapanese": "こちらこそ。どうぞお座りください。",
+                "source": "generated",
+                "generatedAt": "2026-09-01T23:28:46.629Z"
+            },
+            {
+                "id": "job-interview-2",
+                "order": 2,
+                "romaji": "Kantan ni jikoshoukai wo onegai shimasu.",
+                "source": "generated",
+                "english": "Please give a brief self-introduction.",
+                "audioUrl": "",
+                "japanese": "簡単に自己紹介をお願いします。",
+                "scenario": "job-interview",
+                "difficulty": "beginner",
+                "generatedAt": "2026-09-01T23:28:46.629Z",
+                "practicePrompt": "Introduce yourself by stating your name and saying you look forward to working together.",
+                "exampleResponse": "Tanaka Tarou to moushimasu. Yoroshiku onegai shimasu.",
+                "exampleResponseJapanese": "田中太郎と申します。よろしくお願いします。"
+            },
+            {
+                "id": "job-interview-3",
+                "order": 3,
+                "romaji": "Heisha wo shibou shita riyuu wa nan desu ka.",
+                "source": "generated",
+                "english": "What is your reason for applying to our company?",
+                "audioUrl": "",
+                "japanese": "弊社を志望した理由は何ですか。",
+                "scenario": "job-interview",
+                "difficulty": "intermediate",
+                "generatedAt": "2026-09-01T23:28:46.629Z",
+                "practicePrompt": "Explain that you were drawn to the company's products.",
+                "exampleResponse": "Kisha no seihin ni miryoku wo kanjita kara desu.",
+                "exampleResponseJapanese": "貴社の製品に魅力を感じたからです。"
+            },
+            {
+                "id": "job-interview-4",
+                "order": 4,
+                "romaji": "Anata no chousho wo shigoto ni dou ikasemasu ka.",
+                "source": "generated",
+                "english": "How can you leverage your strengths in this job?",
+                "audioUrl": "",
+                "japanese": "あなたの長所を仕事にどう活かせますか。",
+                "scenario": "job-interview",
+                "difficulty": "advanced",
+                "generatedAt": "2026-09-01T23:28:46.629Z",
+                "practicePrompt": "Explain that your communication skills will help improve team productivity.",
+                "exampleResponse": "Komyunikeeshon nouryoku de chiimu no seisansei wo ageraremasu.",
+                "exampleResponseJapanese": "コミュニケーション能力でチームの生産性を上げられます。"
+            },
+            {
+                "id": "job-interview-5",
+                "order": 5,
+                "romaji": "Nanika shitsumon wa arimasu ka.",
+                "source": "generated",
+                "english": "Do you have any questions for us?",
+                "audioUrl": "",
+                "japanese": "何か質問はありますか。",
+                "scenario": "job-interview",
+                "difficulty": "beginner",
+                "generatedAt": "2026-09-01T23:28:46.629Z",
+                "practicePrompt": "Ask what the atmosphere of the workplace is like.",
+                "exampleResponse": "Shokuba no fun'iki wa dou desu ka.",
+                "exampleResponseJapanese": "職場の雰囲気はどうですか。"
+            },
+            {
+                "id": "job-interview-6",
+                "order": 6,
+                "romaji": "Kekka wa isshuukan inai ni gorenraku itashimasu.",
+                "source": "generated",
+                "english": "We will contact you with the results within a week.",
+                "audioUrl": "",
+                "japanese": "結果は一週間以内にご連絡いたします。",
+                "scenario": "job-interview",
+                "difficulty": "intermediate",
+                "generatedAt": "2026-09-01T23:28:46.629Z",
+                "practicePrompt": "Thank them and say you will be looking forward to hearing from them.",
+                "exampleResponse": "Arigatou gozaimasu. Renraku wo omachi shite orimasu.",
+                "exampleResponseJapanese": "ありがとうございます。連絡をお待ちしております。"
+            }
+        ],
+        "updatedAt": "2026-09-01T23:29:44.378Z"
     }
 }

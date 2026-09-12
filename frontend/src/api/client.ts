@@ -55,6 +55,8 @@ export interface NewPhraseInput {
     romaji: string;
     english: string;
     difficulty: Phrase['difficulty'];
+    exampleResponse?: string;
+    exampleResponseJapanese?: string;
     /** Slot the new phrase in right after this phrase id, if provided */
     insertAfterId?: string;
 }
@@ -112,6 +114,29 @@ export interface GeneratedScenarioMeta {
     id: string;
     label: string;
     description: string;
+}
+
+export interface TranslatedPhrase {
+    japanese: string;
+    romaji: string;
+    english: string;
+    exampleResponse: string;
+    exampleResponseJapanese: string;
+}
+
+// Fills in whichever of japanese/romaji/english weren't provided, using the
+// backend's LLM translation endpoint.
+export function translatePhrase(input: {
+    japanese?: string;
+    romaji?: string;
+    english?: string;
+    exampleResponse?: string;
+    exampleResponseJapanese?: string;
+}): Promise<TranslatedPhrase> {
+    return request<TranslatedPhrase>('/api/phrases/translate', {
+        method: 'POST',
+        body: JSON.stringify(input),
+    });
 }
 
 export function fetchGeneratedScenarios(): Promise<GeneratedScenarioMeta[]> {

@@ -7,7 +7,7 @@ import {
     getPracticeResponses,
     setCachedScenario,
 } from './cache';
-import { generatePhrasesForScenario } from './gemini';
+import { generatePhrasesForScenario, translatePhrase } from './gemini';
 
 const PORT = Number(process.env.PORT ?? 4000);
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173';
@@ -67,6 +67,54 @@ Bun.serve({
             return json(allPhrases[dayIndex]);
         }
 
+        // POST /api/phrases/translate - given whichever of japanese/romaji/
+        // english the user typed, fill in the other two via the LLM.
+        if (
+            url.pathname === '/api/phrases/translate' &&
+            req.method === 'POST'
+        ) {
+            const body = await req.json().catch(() => null);
+            const japanese =
+                typeof body?.japanese === 'string' ? body.japanese.trim() : '';
+            const romaji =
+                typeof body?.romaji === 'string' ? body.romaji.trim() : '';
+            const english =
+                typeof body?.english === 'string' ? body.english.trim() : '';
+            const exampleResponse =
+                typeof body?.exampleResponse === 'string'
+                    ? body.exampleResponse.trim()
+                    : '';
+            const exampleResponseJapanese =
+                typeof body?.exampleResponseJapanese === 'string'
+                    ? body.exampleResponseJapanese.trim()
+                    : '';
+
+            if (!japanese && !romaji && !english) {
+                return json(
+                    {
+                        error: 'At least one of japanese, romaji or english is required',
+                    },
+                    { status: 400 },
+                );
+            }
+
+            try {
+                const result = await translatePhrase({
+                    japanese,
+                    romaji,
+                    english,
+                    exampleResponse,
+                    exampleResponseJapanese,
+                });
+                return json(result);
+            } catch (err) {
+                return json(
+                    { error: (err as Error).message },
+                    { status: 502 },
+                );
+            }
+        }
+
         // POST /api/phrases - manually add a phrase to a scenario. Body:
         // { scenario, japanese, romaji, english, difficulty, label?, insertAfterId? }
         // When insertAfterId is given, the new phrase is slotted in
@@ -85,6 +133,14 @@ Bun.serve({
             const english =
                 typeof body?.english === 'string' ? body.english.trim() : '';
             const difficulty = body?.difficulty;
+            const exampleResponse =
+                typeof body?.exampleResponse === 'string'
+                    ? body.exampleResponse.trim()
+                    : '';
+            const exampleResponseJapanese =
+                typeof body?.exampleResponseJapanese === 'string'
+                    ? body.exampleResponseJapanese.trim()
+                    : '';
             const insertAfterId =
                 typeof body?.insertAfterId === 'string'
                     ? body.insertAfterId
@@ -151,8 +207,8 @@ Bun.serve({
                 audioUrl: '',
                 difficulty,
                 practicePrompt: `Respond to "${english}".`,
-                exampleResponse: '',
-                exampleResponseJapanese: '',
+                exampleResponse,
+                exampleResponseJapanese,
                 source: 'generated',
                 generatedAt: new Date().toISOString(),
             };

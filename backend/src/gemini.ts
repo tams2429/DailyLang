@@ -131,3 +131,105 @@ export async function generatePhrasesForScenario(
         generatedAt: now,
     }));
 }
+
+export interface TranslatedPhrase {
+    japanese: string;
+    romaji: string;
+    english: string;
+    exampleResponse: string;
+    exampleResponseJapanese: string;
+}
+
+// Given whichever of japanese/romaji/english the user typed, fill in the
+// missing two fields so an "add phrase" form can be auto-completed.
+export async function translatePhrase(input: {
+    japanese?: string;
+    romaji?: string;
+    english?: string;
+    exampleResponse?: string;
+    exampleResponseJapanese?: string;
+}): Promise<TranslatedPhrase> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error(
+            'GEMINI_API_KEY is not configured. Add it to backend/.env (see backend/.env.example).',
+        );
+    }
+
+    const provided = [
+        input.japanese && `Japanese: ${input.japanese}`,
+        input.romaji && `Romaji: ${input.romaji}`,
+        input.english && `English: ${input.english}`,
+        input.exampleResponse &&
+            `Example response (romaji): ${input.exampleResponse}`,
+        input.exampleResponseJapanese &&
+            `Example response (Japanese): ${input.exampleResponseJapanese}`,
+    ]
+        .filter(Boolean)
+        .join('\n');
+
+    const prompt = `You are helping build a Japanese language learning app.
+The user provided part of a phrase:
+${provided}
+
+Return the complete phrase with all of these fields:
+- japanese: the phrase in Japanese script (kanji/hiragana/katakana as natural)
+- romaji: the romanized reading of the Japanese
+- english: a natural English translation
+- exampleResponse: a natural example reply a learner could say back, written in romaji
+- exampleResponseJapanese: the same example reply written in Japanese script
+
+Keep any field the user already provided unchanged unless it contains an obvious error.`;
+
+    const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                    responseSchema: {
+                        type: 'OBJECT',
+                        properties: {
+                            japanese: { type: 'STRING' },
+                            romaji: { type: 'STRING' },
+                            english: { type: 'STRING' },
+                            exampleResponse: { type: 'STRING' },
+                            exampleResponseJapanese: { type: 'STRING' },
+                        },
+                        required: [
+                            'japanese',
+                            'romaji',
+                            'english',
+                            'exampleResponse',
+                            'exampleResponseJapanese',
+                        ],
+                    },
+                },
+            }),
+        },
+    );
+
+    if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(
+            `Gemini API request failed (${res.status}): ${body.slice(0, 300)}`,
+        );
+    }
+
+    const data = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+        throw new Error('Gemini API returned an unexpected response shape.');
+    }
+
+    try {
+        return JSON.parse(text) as TranslatedPhrase;
+    } catch {
+        throw new Error('Failed to parse Gemini API response as JSON.');
+    }
+}
