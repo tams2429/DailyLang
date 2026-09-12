@@ -32,4 +32,9 @@ export const scenarios: ScenarioMeta[] = [
         label: 'Hotel',
         description: 'Checking in and out of a hotel.',
     },
+    {
+        id: 'whisky-tour',
+        label: 'Whisky tour',
+        description: 'Booking and joining a guided whisky distillery tour.',
+    },
 ];

@@ -84,15 +84,23 @@ export function PhraseCard({
                 </div>
             </div>
 
-            <p className="text-center text-4xl font-semibold text-slate-900">
-                {phrase.japanese}
-            </p>
-            <p className="mt-2 text-center text-lg text-slate-500">
-                {phrase.romaji}
-            </p>
-            <p className="mt-1 text-center text-base text-slate-400">
-                {phrase.english}
-            </p>
+            {phrase.promptType === 'translate' ? (
+                <p className="text-center text-2xl font-semibold text-slate-900">
+                    {phrase.practicePrompt}
+                </p>
+            ) : (
+                <>
+                    <p className="text-center text-4xl font-semibold text-slate-900">
+                        {phrase.japanese}
+                    </p>
+                    <p className="mt-2 text-center text-lg text-slate-500">
+                        {phrase.romaji}
+                    </p>
+                    <p className="mt-1 text-center text-base text-slate-400">
+                        {phrase.english}
+                    </p>
+                </>
+            )}
 
             <div className="mt-6 flex justify-center">
                 <AudioPlayer src={phrase.audioUrl} text={phrase.japanese} />

@@ -118,6 +118,16 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
             ? phrase.exampleResponseJapanese
             : phrase.exampleResponse;
 
+    // Up to 2 alternate answers are accepted alongside the primary one (3 total).
+    const acceptedAnswers = [
+        expectedAnswer,
+        ...(phrase.alternateAnswers ?? []).map((alt) =>
+            inputMode === 'japanese'
+                ? alt.exampleResponseJapanese
+                : alt.exampleResponse,
+        ),
+    ];
+
     const hint =
         inputMode === 'japanese'
             ? buildJapaneseHint(expectedAnswer)
@@ -130,9 +140,10 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
 
         await submitResponse(trimmed);
 
-        const isCorrect =
-            normalize(trimmed, inputMode) ===
-            normalize(expectedAnswer, inputMode);
+        const normalizedInput = normalize(trimmed, inputMode);
+        const isCorrect = acceptedAnswers.some(
+            (answer) => normalize(answer, inputMode) === normalizedInput,
+        );
 
         if (isCorrect) {
             setResult('correct');
@@ -151,12 +162,14 @@ export function ResponsePractice({ phrase }: ResponsePracticeProps) {
     return (
         <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
             <div className="mb-3 flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-slate-500">
-                    Practice prompt:{' '}
-                    <span className="text-slate-700">
-                        {phrase.practicePrompt}
-                    </span>
-                </p>
+                {phrase.promptType !== 'translate' && (
+                    <p className="text-sm font-medium text-slate-500">
+                        Practice prompt:{' '}
+                        <span className="text-slate-700">
+                            {phrase.practicePrompt}
+                        </span>
+                    </p>
+                )}
                 <div className="flex shrink-0 rounded-full border border-slate-300 bg-slate-50 p-0.5 text-xs font-medium">
                     <button
                         type="button"
