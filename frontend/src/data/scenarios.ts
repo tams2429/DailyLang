@@ -37,4 +37,29 @@ export const scenarios: ScenarioMeta[] = [
         label: 'Whisky tour',
         description: 'Booking and joining a guided whisky distillery tour.',
     },
+    {
+        id: 'haircut',
+        label: 'Haircut',
+        description: 'Getting a haircut at a hair salon.',
+    },
+    {
+        id: 'train-station',
+        label: 'Train station',
+        description: 'Buying tickets and navigating a train station.',
+    },
+    {
+        id: 'tennis-class',
+        label: 'Tennis class',
+        description: 'Attending a tennis lesson.',
+    },
+    {
+        id: 'restaurant-recommendations',
+        label: 'Restaurant recommendations',
+        description: 'Asking for and discussing restaurant recommendations.',
+    },
+    {
+        id: 'custom-pillow-appointment',
+        label: 'Custom pillow appointment',
+        description: 'A fitting appointment for a custom-made pillow.',
+    },
 ];
