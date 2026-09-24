@@ -9,6 +9,7 @@ interface Toast {
     id: number;
     message: string;
     tone: 'error' | 'warning' | 'success';
+    actions?: { label: string; onClick: () => void }[];
 }
 
 const toastTone: Record<Toast['tone'], string> = {
@@ -47,6 +48,8 @@ function App() {
         createScenarioWithPhrase,
         deleteEntireScenario,
         deletingScenario,
+        undoDeleteScenario,
+        restoringScenario,
     } = usePhraseStore();
     const currentPhrase = usePhraseStore((state) => state.currentPhrase());
     const allScenarios = useMemo(() => {
@@ -84,14 +87,24 @@ function App() {
 
     // Each call pushes a new toast with its own id, so pressing a button
     // repeatedly re-shows the message every time rather than only once.
-    const addToast = useCallback((message: string, tone: Toast['tone']) => {
-        const id = ++toastIdRef.current;
-        setToasts((prev) => [...prev, { id, message, tone }]);
-        const timer = setTimeout(() => {
-            setToasts((prev) => prev.filter((t) => t.id !== id));
-            timersRef.current = timersRef.current.filter((t) => t !== timer);
-        }, 3000);
-        timersRef.current.push(timer);
+    const addToast = useCallback(
+        (message: string, tone: Toast['tone'], actions?: Toast['actions']) => {
+            const id = ++toastIdRef.current;
+            setToasts((prev) => [...prev, { id, message, tone, actions }]);
+            const timer = setTimeout(() => {
+                setToasts((prev) => prev.filter((t) => t.id !== id));
+                timersRef.current = timersRef.current.filter(
+                    (t) => t !== timer,
+                );
+            }, 3000);
+            timersRef.current.push(timer);
+            return id;
+        },
+        [],
+    );
+
+    const dismissToast = useCallback((id: number) => {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, []);
 
     const handleDelete = async () => {
@@ -134,7 +147,28 @@ function App() {
         const ok = await deleteEntireScenario(scenarioToDelete);
         setShowDeleteScenarioModal(false);
         if (!ok) return;
-        addToast('Scenario deleted', 'error');
+        const toastId = addToast(
+            'Scenario deleted. Undo or Dismiss to keep it deleted.',
+            'warning',
+            [
+                {
+                    label: 'Undo',
+                    onClick: async () => {
+                        const restored = await undoDeleteScenario();
+                        if (restored) dismissToast(toastId);
+                        if (!restored) {
+                            const message =
+                                usePhraseStore.getState().restoreScenarioError;
+                            if (message) addToast(message, 'error');
+                        }
+                    },
+                },
+                {
+                    label: 'Dismiss',
+                    onClick: () => dismissToast(toastId),
+                },
+            ],
+        );
         const currentIdx = allScenarios.findIndex(
             (s) => s.id === scenarioToDelete,
         );
@@ -200,6 +234,21 @@ function App() {
                         className={`max-w-md rounded-full px-4 py-2 text-center text-sm font-medium shadow-lg ${toastTone[toast.tone]}`}
                     >
                         {toast.message}
+                        {toast.actions?.map((action) => (
+                            <button
+                                key={action.label}
+                                type="button"
+                                onClick={action.onClick}
+                                disabled={
+                                    restoringScenario && action.label === 'Undo'
+                                }
+                                className="pointer-events-auto ml-3 font-semibold underline underline-offset-2 disabled:opacity-60"
+                            >
+                                {restoringScenario && action.label === 'Undo'
+                                    ? 'Restoring...'
+                                    : action.label}
+                            </button>
+                        ))}
                     </div>
                 ))}
             </div>

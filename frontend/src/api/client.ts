@@ -126,6 +126,12 @@ export interface GeneratedScenarioMeta {
     description: string;
 }
 
+export interface DeletedScenario {
+    scenario: string;
+    label: string;
+    phrases: Phrase[];
+}
+
 export interface TranslatedPhrase {
     japanese: string;
     romaji: string;
@@ -154,10 +160,20 @@ export function fetchGeneratedScenarios(): Promise<GeneratedScenarioMeta[]> {
 }
 
 // Deletes an entire user-generated scenario and all of its phrases.
-export function deleteScenario(
-    scenarioId: string,
-): Promise<{ scenario: string }> {
-    return request<{ scenario: string }>(`/api/scenarios/${scenarioId}`, {
+export function deleteScenario(scenarioId: string): Promise<DeletedScenario> {
+    return request<DeletedScenario>(`/api/scenarios/${scenarioId}`, {
         method: 'DELETE',
     });
+}
+
+export function restoreScenario(
+    scenario: DeletedScenario,
+): Promise<DeletedScenario> {
+    return request<DeletedScenario>(
+        `/api/scenarios/${scenario.scenario}/restore`,
+        {
+            method: 'POST',
+            body: JSON.stringify(scenario),
+        },
+    );
 }

@@ -8,9 +8,10 @@ import {
     generatePhrases,
     reorderScenarioPhrases,
     restorePhrase,
+    restoreScenario,
     submitPracticeResponse,
 } from '../api/client';
-import type { NewPhraseInput } from '../api/client';
+import type { DeletedScenario, NewPhraseInput } from '../api/client';
 import { scenarios } from '../data/scenarios';
 import type { Phrase, ScenarioId, ScenarioMeta } from '../types';
 
@@ -43,6 +44,9 @@ interface PhraseStore {
     deleting: boolean;
     deleteError: string | null;
     undoing: boolean;
+    deletedScenario: DeletedScenario | null;
+    restoringScenario: boolean;
+    restoreScenarioError: string | null;
     reordering: boolean;
     reorderError: string | null;
 
@@ -70,6 +74,7 @@ interface PhraseStore {
         input: Omit<NewPhraseInput, 'scenario' | 'label' | 'insertAfterId'>,
     ) => Promise<boolean>;
     deleteEntireScenario: (scenarioId: string) => Promise<boolean>;
+    undoDeleteScenario: () => Promise<boolean>;
 }
 
 export const usePhraseStore = create<PhraseStore>((set, get) => ({
@@ -88,6 +93,9 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
     deleting: false,
     deleteError: null,
     undoing: false,
+    deletedScenario: null,
+    restoringScenario: false,
+    restoreScenarioError: null,
     reordering: false,
     reorderError: null,
     adding: false,
@@ -438,7 +446,7 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
     deleteEntireScenario: async (scenarioId) => {
         set({ deletingScenario: true, deleteScenarioError: null });
         try {
-            await deleteScenario(scenarioId);
+            const deleted = await deleteScenario(scenarioId);
             set((state) => {
                 const nextPhrases = state.phrases.filter(
                     (p) => p.scenario !== scenarioId,
@@ -450,6 +458,7 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
                     phrases: nextPhrases,
                     customScenarios,
                     deletedPhrase: null,
+                    deletedScenario: deleted,
                 };
             });
             return true;
@@ -458,6 +467,49 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
             return false;
         } finally {
             set({ deletingScenario: false });
+        }
+    },
+
+    undoDeleteScenario: async () => {
+        const deleted = get().deletedScenario;
+        if (!deleted) return false;
+
+        set({ restoringScenario: true, restoreScenarioError: null });
+        try {
+            const restored = await restoreScenario(deleted);
+            set((state) => {
+                const nextPhrases = [...state.phrases, ...restored.phrases];
+                const customScenarios = state.customScenarios.some(
+                    (scenario) => scenario.id === restored.scenario,
+                )
+                    ? state.customScenarios
+                    : [
+                          ...state.customScenarios,
+                          {
+                              id: restored.scenario,
+                              label: restored.label,
+                              description: 'Custom generated scenario',
+                          },
+                      ];
+                return {
+                    phrases: nextPhrases,
+                    customScenarios,
+                    currentScenario: restored.scenario,
+                    scenarioPhrases: computeScenarioPhrases(
+                        nextPhrases,
+                        restored.scenario,
+                    ),
+                    currentIndex: 0,
+                    deletedScenario: null,
+                    lastSubmittedText: null,
+                };
+            });
+            return true;
+        } catch (err) {
+            set({ restoreScenarioError: (err as Error).message });
+            return false;
+        } finally {
+            set({ restoringScenario: false });
         }
     },
 }));

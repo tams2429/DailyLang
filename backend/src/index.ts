@@ -520,7 +520,68 @@ Bun.serve({
             }
             allPhrases = allPhrases.filter((p) => p.scenario !== slug);
 
-            return json({ scenario: slug });
+            return json({
+                scenario: slug,
+                label: cached.label,
+                phrases: cached.phrases,
+            });
+        }
+
+        // POST /api/scenarios/:slug/restore - restore a deleted custom scenario.
+        const restoreScenarioMatch = url.pathname.match(
+            /^\/api\/scenarios\/([\w-]+)\/restore$/,
+        );
+        if (restoreScenarioMatch && req.method === 'POST') {
+            const slug = restoreScenarioMatch[1];
+            if (scenarios.some((scenario) => scenario.id === slug)) {
+                return json(
+                    { error: 'Seed scenarios cannot be restored here' },
+                    { status: 400 },
+                );
+            }
+
+            const body = (await req.json().catch(() => null)) as {
+                scenario?: unknown;
+                label?: unknown;
+                phrases?: unknown;
+            } | null;
+            if (
+                body?.scenario !== slug ||
+                typeof body.label !== 'string' ||
+                !Array.isArray(body.phrases) ||
+                body.phrases.length === 0 ||
+                body.phrases.some(
+                    (phrase) =>
+                        !phrase ||
+                        typeof phrase !== 'object' ||
+                        (phrase as { scenario?: unknown }).scenario !== slug,
+                )
+            ) {
+                return json(
+                    { error: 'A valid deleted scenario snapshot is required' },
+                    { status: 400 },
+                );
+            }
+
+            if (await getCachedScenario(slug)) {
+                return json(
+                    { error: 'Scenario already exists' },
+                    { status: 409 },
+                );
+            }
+
+            const restored = {
+                scenario: slug,
+                label: body.label,
+                phrases: body.phrases as Phrase[],
+            };
+            try {
+                await setCachedScenario(slug, restored.label, restored.phrases);
+            } catch (err) {
+                return json({ error: (err as Error).message }, { status: 502 });
+            }
+            allPhrases = [...allPhrases, ...restored.phrases];
+            return json(restored);
         }
 
         // Serve preprogrammed audio files from ./public/audio
