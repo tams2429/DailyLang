@@ -22,12 +22,14 @@ function App() {
         currentScenario,
         currentIndex,
         scenarioPhrases,
-        phrases,
         status,
         error,
         loadPhrases,
         nextPhrase,
         previousPhrase,
+        moveCurrentPhrase,
+        reordering,
+        reorderError,
         setScenario,
         customScenarios,
         generating,
@@ -346,7 +348,34 @@ function App() {
                                 {deleteError}
                             </p>
                         )}
+                        {reorderError && (
+                            <p className="text-sm text-rose-600">
+                                {reorderError}
+                            </p>
+                        )}
                         <ResponsePractice phrase={currentPhrase} />
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => moveCurrentPhrase('up')}
+                                disabled={reordering || currentIndex === 0}
+                                className="rounded-full border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                Move up
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => moveCurrentPhrase('down')}
+                                disabled={
+                                    reordering ||
+                                    currentIndex === scenarioPhrases.length - 1
+                                }
+                                className="rounded-full border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                Move down
+                            </button>
+                        </div>
 
                         <div className="flex items-center gap-4">
                             <button

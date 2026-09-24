@@ -1,6 +1,7 @@
 // One-off script to create the DB schema. Run once with:
 //   bun run scripts/migrate.ts
 import postgres from 'postgres';
+import { phrases, scenarios } from '../src/data/phrases';
 
 const sql = postgres(process.env.DATABASE_URL!);
 
@@ -28,4 +29,23 @@ await sql`
 `;
 
 console.log('Schema created/verified.');
+
+if (process.argv.includes('--refresh-seeds')) {
+    for (const scenario of scenarios) {
+        const seedPhrases = phrases
+            .filter((phrase) => phrase.scenario === scenario.id)
+            .map((phrase) => ({ ...phrase, source: 'seed' as const }));
+
+        await sql`
+            insert into scenarios (slug, label, phrases, updated_at)
+            values (${scenario.id}, ${scenario.label}, ${sql.json(seedPhrases)}, now())
+            on conflict (slug) do update
+            set label = excluded.label,
+                phrases = excluded.phrases,
+                updated_at = excluded.updated_at
+        `;
+    }
+    console.log('Seed scenarios refreshed from source data.');
+}
+
 await sql.end();

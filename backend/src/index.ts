@@ -1,4 +1,4 @@
-import { phrases, type Phrase } from './data/phrases';
+import { phrases, scenarios, type Phrase } from './data/phrases';
 import {
     addPracticeResponse,
     deleteCachedScenario,
@@ -22,7 +22,7 @@ function slugify(input: string): string {
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': FRONTEND_ORIGIN,
-    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
 };
 
@@ -41,8 +41,22 @@ function json(data: unknown, init: ResponseInit = {}) {
 // loaded from the JSON cache on disk. Mutated in place as new scenarios are
 // generated so all routes below immediately see new phrases.
 const cachedScenarios = await getAllCachedScenarios();
+for (const scenario of scenarios) {
+    if (cachedScenarios[scenario.id]) continue;
+
+    const seedPhrases = phrases
+        .filter((phrase) => phrase.scenario === scenario.id)
+        .map((phrase) => ({ ...phrase, source: 'seed' as const }));
+    if (seedPhrases.length === 0) continue;
+
+    await setCachedScenario(scenario.id, scenario.label, seedPhrases);
+    cachedScenarios[scenario.id] = {
+        label: scenario.label,
+        phrases: seedPhrases,
+        updatedAt: new Date().toISOString(),
+    };
+}
 let allPhrases: (typeof phrases)[number][] = [
-    ...phrases,
     ...Object.values(cachedScenarios).flatMap((entry) => entry.phrases),
 ];
 
@@ -212,20 +226,70 @@ Bun.serve({
 
             allPhrases = [...allPhrases, phrase];
 
-            // Only generated/custom phrases are persisted in the DB cache;
-            // seed phrases keep their (possibly shifted) order in memory only.
-            const updatedGeneratedPhrases = allPhrases
-                .filter(
-                    (p) => p.scenario === scenario && p.source === 'generated',
-                )
+            const updatedScenarioPhrases = allPhrases
+                .filter((p) => p.scenario === scenario)
                 .sort((a, b) => a.order - b.order);
-            await setCachedScenario(scenario, label, updatedGeneratedPhrases);
+            await setCachedScenario(scenario, label, updatedScenarioPhrases);
 
             const scenarioPhrases = allPhrases
                 .filter((p) => p.scenario === scenario)
                 .sort((a, b) => a.order - b.order);
 
             return json({ phrase, scenarioPhrases }, { status: 201 });
+        }
+
+        // PATCH /api/scenarios/:slug/reorder - persist a complete phrase order.
+        const reorderMatch = url.pathname.match(
+            /^\/api\/scenarios\/([\w-]+)\/reorder$/,
+        );
+        if (reorderMatch && req.method === 'PATCH') {
+            const scenario = reorderMatch[1];
+            const body = (await req.json().catch(() => null)) as {
+                phraseIds?: unknown;
+            } | null;
+            const phraseIds = body?.phraseIds;
+            const current = allPhrases
+                .filter((phrase) => phrase.scenario === scenario)
+                .sort((a, b) => a.order - b.order);
+
+            if (
+                !Array.isArray(phraseIds) ||
+                phraseIds.length !== current.length ||
+                new Set(phraseIds).size !== current.length ||
+                phraseIds.some((id: unknown) => typeof id !== 'string') ||
+                current.some((phrase) => !phraseIds.includes(phrase.id))
+            ) {
+                return json(
+                    {
+                        error: 'phraseIds must contain every phrase exactly once',
+                    },
+                    { status: 400 },
+                );
+            }
+
+            const reordered = (phraseIds as string[]).map(
+                (id: string, index: number) => ({
+                    ...current.find((phrase) => phrase.id === id)!,
+                    order: index + 1,
+                }),
+            );
+            const cached = await getCachedScenario(scenario);
+            const label =
+                cached?.label ??
+                scenarios.find((item) => item.id === scenario)?.label ??
+                scenario;
+
+            try {
+                await setCachedScenario(scenario, label, reordered);
+            } catch (err) {
+                return json({ error: (err as Error).message }, { status: 502 });
+            }
+
+            allPhrases = [
+                ...allPhrases.filter((phrase) => phrase.scenario !== scenario),
+                ...reordered,
+            ];
+            return json(reordered);
         }
 
         // GET /api/scenarios/generated - list scenarios generated via the LLM
@@ -235,11 +299,16 @@ Bun.serve({
         ) {
             const cached = await getAllCachedScenarios();
             return json(
-                Object.entries(cached).map(([id, entry]) => ({
-                    id,
-                    label: entry.label,
-                    description: 'Custom generated scenario',
-                })),
+                Object.entries(cached)
+                    .filter(
+                        ([id]) =>
+                            !scenarios.some((scenario) => scenario.id === id),
+                    )
+                    .map(([id, entry]) => ({
+                        id,
+                        label: entry.label,
+                        description: 'Custom generated scenario',
+                    })),
             );
         }
 
@@ -433,6 +502,12 @@ Bun.serve({
         );
         if (scenarioMatch && req.method === 'DELETE') {
             const slug = scenarioMatch[1];
+            if (scenarios.some((scenario) => scenario.id === slug)) {
+                return json(
+                    { error: 'Seed scenarios cannot be deleted' },
+                    { status: 400 },
+                );
+            }
             const cached = await getCachedScenario(slug);
             if (!cached) {
                 return json({ error: 'Scenario not found' }, { status: 404 });

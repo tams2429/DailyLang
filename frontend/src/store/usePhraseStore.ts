@@ -6,6 +6,7 @@ import {
     fetchGeneratedScenarios,
     fetchPhrases,
     generatePhrases,
+    reorderScenarioPhrases,
     restorePhrase,
     submitPracticeResponse,
 } from '../api/client';
@@ -42,6 +43,8 @@ interface PhraseStore {
     deleting: boolean;
     deleteError: string | null;
     undoing: boolean;
+    reordering: boolean;
+    reorderError: string | null;
 
     adding: boolean;
     addError: string | null;
@@ -53,6 +56,7 @@ interface PhraseStore {
     loadPhrases: () => Promise<void>;
     nextPhrase: () => void;
     previousPhrase: () => void;
+    moveCurrentPhrase: (direction: 'up' | 'down') => Promise<boolean>;
     setScenario: (scenario: ScenarioId) => void;
     submitResponse: (text: string) => Promise<void>;
     generateScenario: (input: string, force?: boolean) => Promise<void>;
@@ -84,6 +88,8 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
     deleting: false,
     deleteError: null,
     undoing: false,
+    reordering: false,
+    reorderError: null,
     adding: false,
     addError: null,
     deletingScenario: false,
@@ -129,6 +135,54 @@ export const usePhraseStore = create<PhraseStore>((set, get) => ({
             lastSubmittedText: null,
             deletedPhrase: null,
         })),
+
+    moveCurrentPhrase: async (direction) => {
+        const state = get();
+        const targetIndex = state.currentIndex + (direction === 'up' ? -1 : 1);
+        if (
+            targetIndex < 0 ||
+            targetIndex >= state.scenarioPhrases.length ||
+            state.reordering
+        ) {
+            return false;
+        }
+
+        const phraseIds = state.scenarioPhrases.map((phrase) => phrase.id);
+        [phraseIds[state.currentIndex], phraseIds[targetIndex]] = [
+            phraseIds[targetIndex],
+            phraseIds[state.currentIndex],
+        ];
+
+        set({ reordering: true, reorderError: null });
+        try {
+            const reordered = await reorderScenarioPhrases(
+                state.currentScenario,
+                phraseIds,
+            );
+            set((current) => {
+                const nextPhrases = [
+                    ...current.phrases.filter(
+                        (phrase) => phrase.scenario !== current.currentScenario,
+                    ),
+                    ...reordered,
+                ];
+                return {
+                    phrases: nextPhrases,
+                    scenarioPhrases: computeScenarioPhrases(
+                        nextPhrases,
+                        current.currentScenario,
+                    ),
+                    currentIndex: targetIndex,
+                };
+            });
+            return true;
+        } catch (err) {
+            set({ reorderError: (err as Error).message });
+            return false;
+        } finally {
+            set({ reordering: false });
+        }
+    },
 
     setScenario: (scenario: ScenarioId) =>
         set((state) => ({

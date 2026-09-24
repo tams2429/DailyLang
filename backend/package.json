@@ -5,7 +5,9 @@
     "type": "module",
     "scripts": {
         "dev": "bun run --watch src/index.ts",
-        "start": "bun run src/index.ts"
+        "start": "bun run src/index.ts",
+        "migrate": "bun run scripts/migrate.ts",
+        "migrate:refresh-seeds": "bun run scripts/migrate.ts --refresh-seeds"
     },
     "devDependencies": {
         "@types/bun": "latest"

@@ -18,6 +18,16 @@ export function fetchPhrases(): Promise<Phrase[]> {
     return request<Phrase[]>('/api/phrases');
 }
 
+export function reorderScenarioPhrases(
+    scenario: string,
+    phraseIds: string[],
+): Promise<Phrase[]> {
+    return request<Phrase[]>(`/api/scenarios/${scenario}/reorder`, {
+        method: 'PATCH',
+        body: JSON.stringify({ phraseIds }),
+    });
+}
+
 export function fetchDailyPhrase(): Promise<Phrase> {
     return request<Phrase>('/api/phrases/daily');
 }
